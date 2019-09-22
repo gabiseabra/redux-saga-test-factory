@@ -1,0 +1,27 @@
+{
+  "name": "redux-saga-test-factory",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "babel ./src -d ./dist",
+    "test": "mocha -r @babel/register -r chai/register-should"
+  },
+  "dependencies": {
+    "@redux-saga/symbols": "^1.1.0",
+    "@redux-saga/testing-utils": "^1.1.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.6.0",
+    "@babel/core": "^7.6.0",
+    "@babel/plugin-transform-runtime": "^7.6.0",
+    "@babel/preset-env": "^7.6.0",
+    "@babel/register": "^7.6.0",
+    "@redux-saga/types": "^1.1.0",
+    "@types/jest": "^24.0.18",
+    "@types/node": "^12.7.5",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.0",
+    "redux-saga": "^1.1.1"
+  }
+}

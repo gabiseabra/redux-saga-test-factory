@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "build": "babel ./src -d ./dist",
-    "test": "mocha -r @babel/register -r chai/register-should"
+    "test": "mocha -r @babel/register -r chai/register-should --recursive"
   },
   "dependencies": {
     "@redux-saga/symbols": "^1.1.0",

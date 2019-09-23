@@ -20,7 +20,7 @@ describe('sagaTestFactory', () => {
     for(let i = 0; i < 2; i++) {
       const it = mySagaTest.clone()
 
-      it('continues cloned saga', ({value: {payload}}) => {
+      it('resumes cloned saga', ({value: {payload}}) => {
         payload.action.should.deep.equal(successAction())
       })
 

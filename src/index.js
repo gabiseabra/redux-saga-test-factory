@@ -1,18 +1,21 @@
 import { IO } from '@redux-saga/symbols'
 import { cloneableGenerator } from '@redux-saga/testing-utils'
 
-const runSaga = (middleware) => (gen, value) => {
-  const state = value instanceof Error ? gen.throw(value) : gen.next(value)
-  const nextValue = middleware.reduce((effect, fn) => {
+const runSaga = (middleware) => (gen, state) => {
+  const nextState =
+    state.value instanceof Error ?
+    gen.throw(state.value) :
+    gen.next(state.value)
+  const value = middleware.reduce((effect, fn) => {
     fn((value) => {
       effect = value
     })(effect)
     return effect
-  }, state.value)
-  return { value: nextValue, done: state.done }
+  }, nextState.value)
+  return Object.assign({}, state, nextState, {value})
 }
 
-export default (options = {}) => (saga, ...args) => {
+export default (options = {}, {it, before} = global) => (saga, ...args) => {
   function sagaTestFactory(gen) {
     let state = {
       value: undefined,
@@ -25,9 +28,9 @@ export default (options = {}) => (saga, ...args) => {
     const itFactory = (it) => (title, fn) => {
       it(title, function () {
         while (!state.done && (!state.value || !state.value[IO])) {
-          state = next(gen, state.value)
+          state = next(gen, state)
         }
-        state.value = fn(state, ...arguments)
+        if(fn) state.value = fn(state, ...arguments)
       })
     }
 

@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "main": "dist/index.js",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gabiseabra/redux-saga-test-factory.git"
+  },
   "scripts": {
     "build": "babel ./src -d ./dist",
     "test": "mocha -r @babel/register -r chai/register-should --recursive"

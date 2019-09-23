@@ -19,7 +19,7 @@ const mockStoreMiddleware = (state) => (next) => (effect) => {
   else next(effect)
 }
 
-describe('cloning', () => {
+describe('effectMiddleware', () => {
   const sagaTest = sagaTestFactory({
     effectMiddlewares: [
       mockStoreMiddleware({

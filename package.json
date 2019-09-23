@@ -8,6 +8,7 @@
     "url": "https://github.com/gabiseabra/redux-saga-test-factory.git"
   },
   "scripts": {
+    "prepublish": "yarn build",
     "build": "babel ./src -d ./dist",
     "test": "mocha -r @babel/register -r chai/register-should --recursive"
   },

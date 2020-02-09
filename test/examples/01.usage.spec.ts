@@ -1,9 +1,9 @@
-import {call, put} from 'redux-saga/effects'
+import { call, put } from 'redux-saga/effects'
 import sagaTestFactory from '../../src'
 
-const fetch = () => null
+const fetch = (_: String) => null
 
-const successAction = (response) => ({type: 'SUCCESS', response})
+const successAction = (response) => ({ type: 'SUCCESS', response })
 
 function* mySaga(url) {
   const response = yield call(fetch, url)
@@ -17,7 +17,7 @@ describe('usage', () => {
   describe('mySaga', () => {
     const it = sagaTest(mySaga, 'https://example.com')
 
-    it('calls an effect', ({value: effect, done}) => {
+    it('calls an effect', ({ value: effect, done }) => {
       effect.type.should.equal('CALL')
       effect.payload.fn.should.equal(fetch)
       effect.payload.args[0].should.equal('https://example.com')
@@ -25,7 +25,7 @@ describe('usage', () => {
       return 'response'
     })
 
-    it('puts successAction', ({value: {payload}}) => {
+    it('puts successAction', ({ value: { payload } }) => {
       payload.action.should.deep.equal(successAction('response'))
     })
   })

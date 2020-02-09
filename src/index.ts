@@ -51,7 +51,7 @@ export default (options: SagaTestFactoryOptions = {}, { it, before, describe } =
     if (state.context) middleware.push(contextMiddleware(state.context))
     const next = runSaga(middleware)
 
-    const itFactory = (it) => (title, fn) => {
+    const itFactory = (it) => (title, fn?) => {
       it(title, function () {
         while (!state.done && (!state.value || !state.value[IO])) {
           state = next(gen, state)

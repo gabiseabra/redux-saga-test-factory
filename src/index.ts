@@ -4,15 +4,16 @@ import contextMiddleware from './middleware/contextMiddleware'
 import { SagaTestOptions, SagaTestIt, SagaGeneratorFunction } from './types'
 
 const def = (options: Partial<SagaTestOptions>): SagaTestOptions => {
+  const g = global as any
   const middleware = options.middleware || []
   if (options.context) middleware.push(contextMiddleware(options.context))
   return {
     middleware,
     context: {},
     env: {
-      it: global.it,
-      describe: global.describe,
-      before: global.before
+      it: g.it || g.test,
+      describe: g.describe,
+      before: g.before || g.beforeAll
     },
     ...options
   }

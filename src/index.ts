@@ -1,24 +1,25 @@
 import eq from 'deep-equal'
+import { EffectMiddleware } from 'redux-saga'
 import { IO } from '@redux-saga/symbols'
 import { cloneableGenerator } from '@redux-saga/testing-utils'
 
 const runSaga = (middleware) => (gen, state) => {
   const nextState =
     state.value instanceof Error ?
-    gen.throw(state.value) :
-    gen.next(state.value)
+      gen.throw(state.value) :
+      gen.next(state.value)
   const value = middleware.reduce((effect, fn) => {
     fn((value) => {
       effect = value
     })(effect)
     return effect
   }, nextState.value)
-  return Object.assign({}, state, nextState, {value})
+  return Object.assign({}, state, nextState, { value })
 }
 
-const getForkedAction = (action) => ({value}) => {
+const getForkedAction = (action) => ({ value }) => {
   const testAction = typeof action == 'function' ? action : (a) => eq(a, action)
-  switch(value.type) {
+  switch (value.type) {
     case 'FORK':
       return testAction(value) ? value : undefined
     case 'ALL':
@@ -28,14 +29,26 @@ const getForkedAction = (action) => ({value}) => {
   }
 }
 
-export default (options = {}, {it, before, describe} = global) => (saga, ...args) => {
+interface SagaTestFactoryOptions {
+  context?: object
+  effectMiddlewares?: EffectMiddleware[]
+}
+
+interface SagaTestState {
+  done: Boolean
+  value: any
+  context?: object
+}
+
+export default (options: SagaTestFactoryOptions = {}, { it, before, describe } = global) => (saga, ...args) => {
   function sagaTestFactory(gen) {
-    let state = {
+    let state: SagaTestState = {
+      done: false,
       value: undefined,
-      context: options.context ? {...options.context} : undefined
+      context: options.context ? { ...options.context } : undefined
     }
-    const middleware = [].concat(options.effectMiddlewares || [])
-    if(state.context) middleware.push(contextMiddleware(state.context))
+    const middleware = options.effectMiddlewares || []
+    if (state.context) middleware.push(contextMiddleware(state.context))
     const next = runSaga(middleware)
 
     const itFactory = (it) => (title, fn) => {
@@ -43,7 +56,7 @@ export default (options = {}, {it, before, describe} = global) => (saga, ...args
         while (!state.done && (!state.value || !state.value[IO])) {
           state = next(gen, state)
         }
-        if(fn) state.value = fn(state, ...arguments)
+        if (fn) state.value = fn(state, ...arguments)
       })
     }
 
@@ -57,13 +70,13 @@ export default (options = {}, {it, before, describe} = global) => (saga, ...args
         const testBlock = (it) => {
           it('forks my action', (data) => {
             const forkedAction = getMyForkedAction(data)
-            if(!forkedAction) throw new Error('Action wasn\'t forked')
-            const {fn, args} = forkedAction.payload
+            if (!forkedAction) throw new Error('Action wasn\'t forked')
+            const { fn, args } = forkedAction.payload
             it.replaceSaga(fn(...args))
           })
         }
         if (block) {
-        describe(`fork ${JSON.stringify(action.payload.args)}`, () => {
+          describe(`fork ${JSON.stringify(action.payload.args)}`, () => {
             const __it = _it.clone(state.value)
             testBlock(__it)
             block(__it)
@@ -89,7 +102,7 @@ export default (options = {}, {it, before, describe} = global) => (saga, ...args
   return sagaTestFactory(cloneableGenerator(saga)(...args))
 }
 
-export const contextMiddleware = (context = {}) => (next) => (effect) => {
+export const contextMiddleware = (context = {}): EffectMiddleware => (next) => (effect) => {
   switch (effect && effect.type) {
     case 'GET_CONTEXT':
       return next(context[effect.payload])

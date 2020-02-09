@@ -65,7 +65,7 @@ export default (options: SagaTestFactoryOptions = {}, { it, before, describe } =
       skip: itFactory(it.skip),
       setValue: (value) => { state.value = value },
       replaceSaga: (nextGen) => { gen = nextGen },
-      forks: (action, block) => {
+      forks: (action, block?) => {
         const getMyForkedAction = getForkedAction(action)
         const testBlock = (it) => {
           it('forks my action', (data) => {
@@ -85,7 +85,7 @@ export default (options: SagaTestFactoryOptions = {}, { it, before, describe } =
           testBlock(_it)
         }
       },
-      clone: (value) => {
+      clone: (value?) => {
         const itFn = sagaTestFactory(gen)
         if (typeof value !== 'undefined') itFn.setValue(value)
 

@@ -6,7 +6,7 @@ A redux saga test helper with support for cloning and mocks using effect middlew
 
 Initialize the default export from this package to configure a `sagaTestFactory`.
 
-The `sagaTest` is an `it` function which runs one test per iteration on a given saga generator.
+The `sagaTest` is an `it` object which runs one test per iteration on a given saga generator.
 
 ```js
 import {call, put} from 'redux-saga/effects'
@@ -36,14 +36,26 @@ describe('mySaga', () => {
   })
 })
 ```
-[See full example](test/examples/01.usage.spec.js)
-
+[See full example](test/examples/01.usage.spec.ts)
 
 ## Cloning
 
 `sagaTest.clone` branches the state of the generator into another `sagaTest` function, which runs without affecting the state of the original one.
 
-The first argument takes a value to override the value resolved from the previous test before resuming.
+It may take a value to override the one resolved from the previous test before resuming.
+
+```ts
+clone(value?): SagaTestIt<Ctx>
+```
+
+`clone` can be used as a block function by passing a description and callback. The first parameter of the callback is the cloned saga test.
+
+```js
+clone(desc: string, fn: SagaTestForkBlock<Ctx>): SagaTestIt<Ctx>
+clone(desc: string, value: any, fn: SagaTestForkBlock<Ctx>): SagaTestIt<Ctx>
+```
+
+Example usage:
 
 ```js
 // ...
@@ -58,7 +70,6 @@ function* mySaga(url) {
 }
 
 const sagaTest = sagaTestFactory()
-
   
 describe('mySaga', () => {
   const mySagaTest = sagaTest(mySaga, 'https://example.com')
@@ -84,8 +95,70 @@ describe('mySaga', () => {
   })
 })
 ```
-[See full example](test/examples/02.cloning.spec.js)
+[See full example](test/examples/02.cloning.spec.ts)
 
+## Forking
+
+Callable effects can be tested and branched with `sagaTest.forks`.
+
+It tests that an effect is called by checking the current effect against a matcher, and then replaces the `sagaTest` instance's iterator with a new iterator of the forked function, so the test resumes with values yielded from it.
+
+A test matcher may be an effect object or a function of signature type `(e: Effect) => boolean`.
+
+When a callback is provided the `sagaTest` first is cloned and branches into a describe block, so the state of the original saga test is preserved.
+
+```ts
+  forks<T, RT>(
+    desc: string,
+    expectedEffect: EffectExpectation<T, RT>,
+    fn?: SagaTestForkBlock<Ctx>
+  ): this
+  forks<T, RT>(
+    expectedEffect: EffectExpectation<T, RT>,
+    fn?: SagaTestForkBlock<Ctx>
+  ): this
+```
+
+Example usage:
+
+```js
+// ...
+
+const ACTION_A = 'ACTION_A'
+const RESPONSE = 'ACTION_RESPONSE'
+
+const response = value => ({ type: RESPONSE, value })
+
+function* aSaga(_: Action) {
+  yield put(response('A'))
+}
+
+function* mainSaga() {
+  yield all([
+    takeEvery(ACTION_A, aSaga),
+    // other forks ...
+  ])
+}
+
+describe('context', () => {
+  const sagaTest = sagaTestFactory()
+
+  describe('mainSaga', () => {
+    const it = sagaTest(mainSaga)
+
+    it.forks(takeEvery(ACTION_A, aSaga), it => {
+      it('takes an ACTION_A', () => ({ type: ACTION_A }))
+
+      it.forks(fork(aSaga, { type: ACTION_A }))
+
+      it('yields a response of A', ({ value: { payload } }) => {
+        payload.action.should.deep.equal(response('A'))
+      })
+    })
+  })
+})
+```
+[See full example](test/examples/05.forking.spec.ts)
 
 ## Options
 
@@ -120,9 +193,9 @@ describe('mySaga', () => {
   })
 })
 ```
-[See full example](test/examples/03.context.spec.js)
+[See full example](test/examples/03.context.spec.ts)
 
-### effectMiddlewares
+### middleware
 
 Effect middlewares are called once for each iteration of a saga generator before running a test.
 
@@ -143,9 +216,9 @@ const mockStoreMiddleware = (state) => (next) => (effect) => {
 }
 
 const sagaTest = sagaTestFactory({
-  effectMiddlewares: [
+  middleware: [
     mockStoreMiddleware({ /* ... redux state */ })
   ]
 })
 ```
-[See full example](test/examples/04.effectMiddleware.spec.js)
+[See full example](test/examples/04.middleware.spec.ts)

@@ -27,7 +27,7 @@ function* mainSaga() {
   ])
 }
 
-describe('context', () => {
+describe('forking', () => {
   const sagaTest = sagaTestFactory()
 
   describe('mainSaga', () => {

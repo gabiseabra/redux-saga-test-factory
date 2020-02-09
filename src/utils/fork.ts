@@ -28,13 +28,15 @@ export const getForkedEffect = <T, RT>(
       : ((e => eq(e, expectedEffect)) as EffectMatcher<T, RT>)
 
   switch (effect.type) {
-    case 'FORK':
-      return testEffect(effect) ? effect.payload : undefined
     case 'ALL': {
       const allEffects: Effect<any, CallEffectDescriptor<RT>>[] = effect.payload
       const match = allEffects.find(testEffect)
       return match ? match.payload : undefined
     }
+    case 'CPS':
+    case 'CALL':
+    case 'FORK':
+      return testEffect(effect) ? effect.payload : undefined
     default:
       return undefined
   }

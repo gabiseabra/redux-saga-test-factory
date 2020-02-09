@@ -156,7 +156,7 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
     return this
   }
 
-  clone(...args): SagaTestIt<Ctx> {
+  clone(...args) {
     const [desc, value, fn] = cloneArgs<Ctx>(...args)
     const it = SagaTest.new(
       {

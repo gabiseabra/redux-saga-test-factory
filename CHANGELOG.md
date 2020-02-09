@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- `forks` block function (10ab0250138b526fe71b4eeea93c42a8cb4b46d9)
-- typescript typings (10ab0250138b526fe71b4eeea93c42a8cb4b46d9)
+- `forks` block function [10ab025](https://github.com/gabiseabra/redux-saga-test-factory/commit/10ab025)
+- typescript typings [2cc9d5a](https://github.com/gabiseabra/redux-saga-test-factory/commit/2cc9d5a)
 
 ## v0.1.1

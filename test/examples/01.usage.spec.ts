@@ -14,7 +14,7 @@ describe('usage', () => {
   const sagaTest = sagaTestFactory()
 
   sagaTest(mySaga, 'https://example.com').do(it => {
-    it('calls an effect', ({ value: effect }) => {
+    it('calls an effect', effect => {
       effect.type.should.equal('CALL')
       effect.payload.fn.should.equal(fetch)
       effect.payload.args[0].should.equal('https://example.com')
@@ -22,7 +22,7 @@ describe('usage', () => {
       return 'response'
     })
 
-    it('puts successAction', ({ value: { payload } }) => {
+    it('puts successAction', ({ payload }) => {
       payload.action.should.deep.equal(successAction('response'))
     })
   })

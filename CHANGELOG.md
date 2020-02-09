@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- remove value from `SagaTestState` and change signature of `SagaTestItBlock`
 - `do` block function
 
 ## v1.0.0

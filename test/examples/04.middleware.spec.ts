@@ -30,7 +30,7 @@ describe('middleware', () => {
   describe('mySaga', () => {
     const it = sagaTest(mySaga)
 
-    it('calls fetch with user id from store', ({ value: { payload } }) => {
+    it('calls fetch with user id from store', ({ payload }) => {
       payload.fn.should.equal(fetch)
       payload.args[0].should.equal('/users/1')
     })

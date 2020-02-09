@@ -38,26 +38,26 @@ describe('forking', () => {
 
       it.forks(fork(aSaga, { type: ACTION_A }))
 
-      it('yields a response of A', ({ value: { payload } }) => {
+      it('yields a response of A', ({ payload }) => {
         payload.action.should.deep.equal(response('A'))
       })
     })
 
     it.forks(fork(bSaga), it => {
-      it('yields a response of B', ({ value: { payload } }) => {
+      it('yields a response of B', ({ payload }) => {
         payload.action.should.deep.equal(response('B'))
       })
     })
 
     it.forks(cps(syncFunction), it => {
-      it('calls syncFunction', ({ value, done }) => {
+      it('calls syncFunction', (value, { done }) => {
         done.should.equal(true)
         value.should.equal('syncFunction')
       })
     })
 
     it.forks(call(asyncFunction), it => {
-      it('calls asyncFunction', async ({ value: promise, done }) => {
+      it('calls asyncFunction', async (promise, { done }) => {
         promise.should.be.instanceOf(Promise)
         const value = await promise
         done.should.equal(true)

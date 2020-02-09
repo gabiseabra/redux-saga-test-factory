@@ -27,7 +27,7 @@ describe('context', () => {
     // GET_CONTEXT is intercepted by contextEffectMiddleware
     // it('gets apiClient from context')
 
-    it('calls apiClient.fetch', ({ context, value: { payload } }) => {
+    it('calls apiClient.fetch', ({ payload }, { context }) => {
       payload.fn.should.equal(context.apiClient.fetch)
       return 'test'
     })
@@ -35,7 +35,7 @@ describe('context', () => {
     // SET_CONTEXT is intercepted by contextEffectMiddleware
     // it('sets result to context')
 
-    it('updates context and is done', ({ context, done }) => {
+    it('updates context and is done', (_effect, { context, done }) => {
       done.should.equal(true)
       context.result.should.equal('test')
     })

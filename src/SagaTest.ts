@@ -67,7 +67,7 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
   }
 
   get state(): SagaTestState<Ctx> {
-    return { done: this.done, value: this.value, context: this.context }
+    return { done: this.done, context: this.context }
   }
 
   protected applyMiddleware(effect: Effect): Effect {
@@ -85,7 +85,7 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
       const getState = () => this.state
       it(desc, (...args) => {
         while (!this.done && (!this.value || !this.value[IO])) runSaga()
-        if (fn) this.value = fn(getState(), ...args)
+        if (fn) this.value = fn(this.value, getState(), ...args)
       })
     }
   }
@@ -120,8 +120,8 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
     const [desc, expectedEffect, fn] = forksArgs<Ctx, T, RT>(...args)
     const getMyForkedAction = getForkedEffect(expectedEffect)
     const testBlock = <ST extends SagaTestI<Ctx>>(desc_, it: ST) => {
-      it.__call__(desc_, ({ value }) => {
-        const forkedAction = getMyForkedAction(value)
+      it.__call__(desc_, effect => {
+        const forkedAction = getMyForkedAction(effect)
         if (!forkedAction) throw new Error("Action wasn't forked")
         it.replaceSaga(effectToIterator(forkedAction))
       })

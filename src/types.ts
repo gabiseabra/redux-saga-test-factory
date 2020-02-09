@@ -72,6 +72,7 @@ export type SagaGeneratorFunction<RT = any, Args extends any[] = any[]> = (
  * whatever other arguments `it()` provides.
  */
 export type SagaTestItBlock<Ctx> = (
+  effect: Effect,
   state: SagaTestState<Ctx>,
   ...any: any[]
 ) => any
@@ -101,7 +102,6 @@ export interface SagaTestOptions<Ctx extends {} = any> {
 
 export interface SagaTestState<Ctx extends {} = any> {
   done: boolean
-  value: Effect
   context: Ctx
 }
 

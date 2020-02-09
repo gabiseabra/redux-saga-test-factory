@@ -10,7 +10,7 @@ describe('sagaTestFactory', () => {
   const it = mySagaTest
 
   // GET_CONTEXT is intercepted by contextEffectMiddleware
-  it('skips intercepted effects', ({ value: { type, payload } }) => {
+  it('skips intercepted effects', ({ type, payload }) => {
     type.should.equal('CALL')
     payload.fn.should.equal(apiClient.login)
   })
@@ -19,11 +19,11 @@ describe('sagaTestFactory', () => {
     for (let i = 0; i < 2; i++) {
       const it = mySagaTest.clone()
 
-      it('resumes cloned saga', ({ value: { payload } }) => {
+      it('resumes cloned saga', ({ payload }) => {
         payload.action.should.deep.equal(successAction())
       })
 
-      it('finishes', ({ done }) => {
+      it('finishes', (_, { done }) => {
         done.should.equal(true)
       })
     }
@@ -34,13 +34,13 @@ describe('sagaTestFactory', () => {
     const user = { name: 'test' }
     const it = mySagaTest.clone(response)
 
-    it('receives new result', ({ value: { payload } }) => {
+    it('receives new result', ({ payload }) => {
       payload.fn.should.equal(apiClient.verify)
       payload.args[0].should.equal(response)
       return user
     })
 
-    it('receives result from previous test', ({ value: { payload } }) => {
+    it('receives result from previous test', ({ payload }) => {
       payload.action.should.deep.equal(successAction(user))
     })
   })
@@ -49,7 +49,7 @@ describe('sagaTestFactory', () => {
     const response = new Error()
     const it = mySagaTest.clone(response)
 
-    it('catches an error', ({ value: { payload } }) => {
+    it('catches an error', ({ payload }) => {
       payload.action.should.deep.equal(errorAction(response))
     })
   })

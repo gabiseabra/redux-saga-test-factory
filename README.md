@@ -1,6 +1,6 @@
 # redux-saga-test-factory
 
-A redux saga test helper with support for cloning and mocks using effect middlewares. Inspired by [redux-saga-testing](https://github.com/antoinejaussoin/redux-saga-testing) and [@redux-saga/testing-utils](https://github.com/redux-saga/redux-saga/tree/master/packages/testing-utils)' `cloneableGenerator`.
+A redux saga test helper with support for cloning, forking and mocks using effect middlewares. Inspired by [redux-saga-testing](https://github.com/antoinejaussoin/redux-saga-testing) and [@redux-saga/testing-utils](https://github.com/redux-saga/redux-saga/tree/master/packages/testing-utils)' `cloneableGenerator`.
 
 ## Usage
 
@@ -40,9 +40,9 @@ describe('mySaga', () => {
 
 ## Cloning
 
-`sagaTest.clone` branches the state of the generator into another `sagaTest` function, which runs without affecting the state of the original one.
+`sagaTest.clone` branches the `sagaTest` into another instance of itself with the same sate, which runs without affecting the state of the original one.
 
-It may take a value to override the one resolved from the previous test before resuming.
+It may take a value to override the value resolved from the previous test before resuming.
 
 ```ts
 clone(value?): SagaTestIt<Ctx>

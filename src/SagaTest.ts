@@ -5,8 +5,8 @@ import { SagaIteratorClone } from '@redux-saga/testing-utils'
 import contextMiddleware from './middleware/contextMiddleware'
 import {
   TestEnv,
-  BlockFunction,
-  SagaTestBlockFunction,
+  ItBlockFunction,
+  SagaTestItFunction,
   SagaTestOptions,
   SagaTestState,
   SagaTestIt,
@@ -53,9 +53,9 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
   done = false
   context: Ctx
 
-  __call__: SagaTestBlockFunction<Ctx>
-  only: SagaTestBlockFunction<Ctx>
-  skip: SagaTestBlockFunction<Ctx>
+  __call__: SagaTestItFunction<Ctx>
+  only: SagaTestItFunction<Ctx>
+  skip: SagaTestItFunction<Ctx>
 
   static new<Ctx extends {}>(
     options: SagaTestOptions<Ctx>,
@@ -103,7 +103,7 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
     }, effect)
   }
 
-  protected enhanceIt(it: BlockFunction): SagaTestBlockFunction<Ctx> {
+  protected enhanceIt(it: ItBlockFunction): SagaTestItFunction<Ctx> {
     return (desc, fn?) => {
       const runSaga = this.runSaga.bind(this)
       const getState = () => this.state

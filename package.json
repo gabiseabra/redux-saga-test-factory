@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@redux-saga/symbols": "^1.1.0",
-    "@redux-saga/testing-utils": "^1.1.1"
+    "@redux-saga/testing-utils": "^1.1.1",
+    "deep-equal": "^2.0.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.6.0",

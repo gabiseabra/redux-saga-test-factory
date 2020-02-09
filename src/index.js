@@ -1,3 +1,4 @@
+import eq from 'deep-equal'
 import { IO } from '@redux-saga/symbols'
 import { cloneableGenerator } from '@redux-saga/testing-utils'
 
@@ -15,7 +16,19 @@ const runSaga = (middleware) => (gen, state) => {
   return Object.assign({}, state, nextState, {value})
 }
 
-export default (options = {}, {it, before} = global) => (saga, ...args) => {
+const getForkedAction = (action) => ({value}) => {
+  const testAction = typeof action == 'function' ? action : (a) => eq(a, action)
+  switch(value.type) {
+    case 'FORK':
+      return testAction(value) ? value : undefined
+    case 'ALL':
+      return value.payload.find(testAction)
+    default:
+      return false
+  }
+}
+
+export default (options = {}, {it, before, describe} = global) => (saga, ...args) => {
   function sagaTestFactory(gen) {
     let state = {
       value: undefined,
@@ -34,11 +47,31 @@ export default (options = {}, {it, before} = global) => (saga, ...args) => {
       })
     }
 
-    return Object.assign(itFactory(it), {
+    const _it = Object.assign(itFactory(it), {
       only: itFactory(it.only),
       skip: itFactory(it.skip),
       setValue: (value) => { state.value = value },
       replaceSaga: (nextGen) => { gen = nextGen },
+      forks: (action, block) => {
+        const getMyForkedAction = getForkedAction(action)
+        const testBlock = (it) => {
+          it('forks my action', (data) => {
+            const forkedAction = getMyForkedAction(data)
+            if(!forkedAction) throw new Error('Action wasn\'t forked')
+            const {fn, args} = forkedAction.payload
+            it.replaceSaga(fn(...args))
+          })
+        }
+        if (block) {
+        describe(`fork ${JSON.stringify(action.payload.args)}`, () => {
+            const __it = _it.clone(state.value)
+            testBlock(__it)
+            block(__it)
+          })
+        } else {
+          testBlock(_it)
+        }
+      },
       clone: (value) => {
         const itFn = sagaTestFactory(gen)
         if (typeof value !== 'undefined') itFn.setValue(value)
@@ -50,6 +83,8 @@ export default (options = {}, {it, before} = global) => (saga, ...args) => {
         return itFn
       }
     })
+
+    return _it
   }
   return sagaTestFactory(cloneableGenerator(saga)(...args))
 }

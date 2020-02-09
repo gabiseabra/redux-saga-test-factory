@@ -1,18 +1,16 @@
-import { IO } from '@redux-saga/symbols'
 import { EffectMiddleware } from 'redux-saga'
 import { Effect } from '@redux-saga/types'
 import { SagaIteratorClone } from '@redux-saga/testing-utils'
 import contextMiddleware from './middleware/contextMiddleware'
 import {
   TestEnv,
-  ItBlockFunction,
   SagaTestItFunction,
   SagaTestOptions,
   SagaTestState,
-  SagaTestIt,
   SagaTestI
 } from './types'
-import { getForkedEffect, effectToIterator } from './utils/fork'
+import { itFactory, enhanceIt } from './utils/tests'
+import { matchCallEffect, effectToIterator } from './utils/fork'
 import { forksArgs, cloneArgs, doArgs } from './utils/arguments'
 
 export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
@@ -25,27 +23,8 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
   context: Ctx
 
   __call__: SagaTestItFunction<Ctx>
-  only: SagaTestItFunction<Ctx>
-  skip: SagaTestItFunction<Ctx>
 
-  static new<Ctx extends {}>(
-    options: SagaTestOptions<Ctx>,
-    saga: SagaIteratorClone & { name?: string },
-    value?
-  ): SagaTestIt<Ctx> {
-    const instance = new SagaTest(options, saga, value)
-    return Object.assign(instance.__call__, {
-      __call__: instance.__call__.bind(instance),
-      do: instance.do.bind(instance),
-      skip: instance.skip.bind(instance),
-      only: instance.only.bind(instance),
-      forks: instance.forks.bind(instance),
-      clone: instance.clone.bind(instance),
-      setValue: instance.setValue.bind(instance),
-      runSaga: instance.runSaga.bind(instance),
-      replaceSaga: instance.replaceSaga.bind(instance)
-    })
-  }
+  static new = itFactory(SagaTest, options => options.env.it)
 
   constructor(
     options: SagaTestOptions<Ctx>,
@@ -61,9 +40,7 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
     if (this.context && !options.middleware)
       this.middleware.push(contextMiddleware(this.context))
 
-    this.__call__ = this.enhanceIt(this.env.it)
-    this.only = this.enhanceIt(this.env.it.only)
-    this.skip = this.enhanceIt(this.env.it.skip)
+    this.__call__ = enhanceIt(this, this.env.it)
   }
 
   get state(): SagaTestState<Ctx> {
@@ -77,17 +54,6 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
       })(effect)
       return effect
     }, effect)
-  }
-
-  protected enhanceIt(it: ItBlockFunction): SagaTestItFunction<Ctx> {
-    return (desc, fn?) => {
-      const runSaga = this.runSaga.bind(this)
-      const getState = () => this.state
-      it(desc, (...args) => {
-        while (!this.done && (!this.value || !this.value[IO])) runSaga()
-        if (fn) this.value = fn(this.value, getState(), ...args)
-      })
-    }
   }
 
   runSaga() {
@@ -118,10 +84,10 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
 
   forks<T, RT>(...args) {
     const [desc, expectedEffect, fn] = forksArgs<Ctx, T, RT>(...args)
-    const getMyForkedAction = getForkedEffect(expectedEffect)
+    const matchMyCallEffect = matchCallEffect(expectedEffect)
     const testBlock = <ST extends SagaTestI<Ctx>>(desc_, it: ST) => {
       it.__call__(desc_, effect => {
-        const forkedAction = getMyForkedAction(effect)
+        const forkedAction = matchMyCallEffect(effect)
         if (!forkedAction) throw new Error("Action wasn't forked")
         it.replaceSaga(effectToIterator(forkedAction))
       })
@@ -140,24 +106,14 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
 
   clone(...args) {
     const [desc, value, fn] = cloneArgs<Ctx>(...args)
-    const it = SagaTest.new(
-      {
-        context: this.context,
-        middleware: this.middleware,
-        env: this.env
-      },
-      this.saga,
-      value || this.value
-    )
+    const it = SagaTest.new(this, this.saga, value || this.value)
 
     if (!fn) this.env.before(() => it.replaceSaga(this.saga.clone()))
-    else {
+    else
       this.env.describe(desc, () => {
         this.env.before(() => it.replaceSaga(this.saga.clone()))
-
         fn(it)
       })
-    }
 
     return it
   }

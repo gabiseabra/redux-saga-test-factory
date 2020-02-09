@@ -1,16 +1,25 @@
+/**
+ * Helpers for `SagaTestI`'s fork method that handle redux saga effects.
+ * @module utils/arguments
+ */
 import eq from 'deep-equal'
 import { CallEffectDescriptor } from 'redux-saga/effects'
-import { Effect, SagaIterator } from '@redux-saga/types'
-import { EffectExpectation, EffectMatcher } from '../types'
+import { Effect } from '@redux-saga/types'
 import {
   SagaIteratorClone,
   cloneableGenerator
 } from '@redux-saga/testing-utils'
+import { EffectExpectation, EffectMatcher } from '../types'
+import { isIter } from './generator'
 
 const takeFns = ['takeEvery', 'takeLatest', 'takeLeading', 'takeMaybe']
 
 const fname = fn => `${fn.constructor.name}: ${fn.name || 'Anonymous'}`
 
+/**
+ * Generates a descriptive name for a given `EffectExpectation`.
+ * @param expectedEffect
+ */
 export const describeEffect = (expectedEffect: EffectExpectation): string => {
   if (typeof expectedEffect === 'function') return 'expected effect'
   const { fn, args } = expectedEffect.payload
@@ -19,7 +28,11 @@ export const describeEffect = (expectedEffect: EffectExpectation): string => {
   } else return fname(fn)
 }
 
-export const getForkedEffect = <T, RT>(
+/**
+ *
+ * @param expectedEffect
+ */
+export const matchCallEffect = <T, RT>(
   expectedEffect: EffectExpectation<T, RT>
 ) => (effect: Effect): CallEffectDescriptor<RT> | undefined => {
   const testEffect =
@@ -41,14 +54,6 @@ export const getForkedEffect = <T, RT>(
       return undefined
   }
 }
-
-interface Iter {
-  [Symbol.iterator]()
-}
-const isIter = <RT>(obj: any): obj is SagaIterator<RT> & Iter =>
-  typeof obj === 'object' &&
-  typeof obj.next === 'function' &&
-  typeof obj.throw === 'function'
 
 export const effectToIterator = <RT>(
   effect: CallEffectDescriptor<RT>

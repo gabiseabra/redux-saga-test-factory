@@ -1,5 +1,6 @@
 /**
  * Parsers for `SagaTestI`'s polymorphic functions.
+ * @module utils/arguments
  */
 import { SagaTestIt, EffectExpectation, Callback } from '../types'
 import { describeEffect } from './fork'

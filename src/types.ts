@@ -75,7 +75,7 @@ export type SagaTestItBlock<Ctx> = (
   effect: Effect,
   state: SagaTestState<Ctx>,
   ...any: any[]
-) => any
+) => Iterator<Effect> | Promise<any> | any
 
 export type SagaTestItBlockParams<Ctx> = Parameters<SagaTestItBlock<Ctx>>
 
@@ -110,6 +110,8 @@ export interface SagaTestState<Ctx extends {} = any> {
  */
 export interface SagaTestI<Ctx> {
   __call__: SagaTestItFunction<Ctx>
+  value: any
+  state: SagaTestState<Ctx>
   /**
    * ## Mutating methods
    * These methods mutate the state of the current saga test. They should run

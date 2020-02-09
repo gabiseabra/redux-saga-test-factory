@@ -9,7 +9,9 @@ function* mySaga(url) {
 
 describe('context', () => {
   const apiClient = {
-    fetch() { return null }
+    fetch() {
+      return null
+    }
   }
 
   const sagaTest = sagaTestFactory({

@@ -1,10 +1,10 @@
 import { call, put } from 'redux-saga/effects'
 import sagaTestFactory from '../../src'
 
-const fetch = (_: String) => null
+const fetch = (_: string) => null
 
-const successAction = (response) => ({ type: 'SUCCESS', response })
-const errorAction = (error) => ({ type: 'ERROR', error })
+const successAction = response => ({ type: 'SUCCESS', response })
+const errorAction = error => ({ type: 'ERROR', error })
 
 function* mySaga(url) {
   try {

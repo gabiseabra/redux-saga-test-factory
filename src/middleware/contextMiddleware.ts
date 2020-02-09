@@ -1,6 +1,6 @@
 import { EffectMiddleware } from 'redux-saga'
 
-export default (context = {}): EffectMiddleware => (next) => (effect) => {
+export default (context = {}): EffectMiddleware => next => effect => {
   switch (effect && effect.type) {
     case 'GET_CONTEXT':
       return next(context[effect.payload])

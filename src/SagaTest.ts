@@ -1,18 +1,37 @@
-
 import { IO } from '@redux-saga/symbols'
-import { EffectMiddleware } from "redux-saga"
+import { EffectMiddleware } from 'redux-saga'
+import { Effect } from '@redux-saga/types'
 import { SagaIteratorClone } from '@redux-saga/testing-utils'
 import contextMiddleware from './middleware/contextMiddleware'
-import { TestEnv, BlockFunction, SagaTestBlockFunction, SagaTestOptions, SagaTestState, SagaTestIt, SagaTestI, EffectExpectation, Callback } from './types'
+import {
+  TestEnv,
+  BlockFunction,
+  SagaTestBlockFunction,
+  SagaTestOptions,
+  SagaTestState,
+  SagaTestIt,
+  SagaTestI,
+  EffectExpectation,
+  Callback
+} from './types'
 import { describeEffect, getForkedEffect, effectToIterator } from './utils/fork'
+
+const forksArgs = <Ctx, RT, Fn extends Callback = Callback<[SagaTestIt<Ctx>]>>(
+  ...args
+): [string, EffectExpectation<RT>, Fn] => {
+  if (typeof args[0] !== 'string') {
+    return [`fork ${describeEffect(args[0])}`, args[0], args[1]]
+  }
+  return [args[0], args[1], args[2]]
+}
 
 export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
   protected middleware: EffectMiddleware[]
   protected env: TestEnv
   protected saga: SagaIteratorClone
 
-  done: Boolean = false
-  value: any
+  value
+  done = false
   context: Ctx
 
   __call__: SagaTestBlockFunction<Ctx>
@@ -33,13 +52,13 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
       clone: instance.clone.bind(instance),
       setValue: instance.setValue.bind(instance),
       runSaga: instance.runSaga.bind(instance),
-      replaceSaga: instance.replaceSaga.bind(instance),
+      replaceSaga: instance.replaceSaga.bind(instance)
     })
   }
 
   constructor(options: SagaTestOptions<Ctx>, saga: SagaIteratorClone, value?) {
     this.value = value
-    this.context = options.context || {} as Ctx
+    this.context = options.context || ({} as Ctx)
     this.middleware = options.middleware || []
     this.saga = saga
     this.env = options.env
@@ -56,9 +75,9 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
     return { done: this.done, value: this.value, context: this.context }
   }
 
-  protected applyMiddleware(effect) {
+  protected applyMiddleware(effect: Effect): Effect {
     return this.middleware.reduce((effect, fn) => {
-      fn((value) => {
+      fn(value => {
         effect = value
       })(effect)
       return effect
@@ -70,8 +89,7 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
       const runSaga = this.runSaga.bind(this)
       const getState = () => this.state
       it(desc, (...args) => {
-        while (!this.done && (!this.value || !this.value[IO]))
-          runSaga()
+        while (!this.done && (!this.value || !this.value[IO])) runSaga()
         if (fn) this.value = fn(getState(), ...args)
       })
     }
@@ -79,9 +97,9 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
 
   runSaga() {
     const state =
-      this.value instanceof Error && this.saga.throw ?
-        this.saga.throw(this.value) :
-        this.saga.next(this.value)
+      this.value instanceof Error && this.saga.throw
+        ? this.saga.throw(this.value)
+        : this.saga.next(this.value)
     this.value = this.applyMiddleware(state.value)
     this.done = Boolean(state.done)
     return this
@@ -98,12 +116,12 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
   }
 
   forks<RT>(...args) {
-    let [desc, expectedEffect, fn] = forksArgs<Ctx, RT>(...args)
+    const [desc, expectedEffect, fn] = forksArgs<Ctx, RT>(...args)
     const getMyForkedAction = getForkedEffect(expectedEffect)
     const testBlock = <ST extends SagaTestI<Ctx>>(desc_, it: ST) => {
       it.__call__(desc_, ({ value }) => {
         const forkedAction = getMyForkedAction(value)
-        if (!forkedAction) throw new Error('Action wasn\'t forked')
+        if (!forkedAction) throw new Error("Action wasn't forked")
         it.replaceSaga(effectToIterator(forkedAction))
       })
     }
@@ -120,21 +138,18 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
   }
 
   clone(value?): SagaTestIt<Ctx> {
-    const sagaTest = SagaTest.new({
-      context: this.context,
-      middleware: this.middleware,
-      env: this.env
-    }, this.saga, value || this.value)
+    const sagaTest = SagaTest.new(
+      {
+        context: this.context,
+        middleware: this.middleware,
+        env: this.env
+      },
+      this.saga,
+      value || this.value
+    )
 
     this.env.before(() => sagaTest.replaceSaga(this.saga.clone()))
 
     return sagaTest
   }
-}
-
-const forksArgs = <Ctx, RT, Fn extends Callback = Callback<[SagaTestIt<Ctx>]>>(...args): [string, EffectExpectation<RT>, Fn] => {
-  if (typeof args[0] !== 'string') {
-    return [`fork ${describeEffect(args[0])}`, args[0], args[1]]
-  }
-  return [args[0], args[1], args[2]]
 }

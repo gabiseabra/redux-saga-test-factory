@@ -2,21 +2,20 @@ import { IO } from '@redux-saga/symbols'
 import { call, select } from 'redux-saga/effects'
 import sagaTestFactory from '../../src'
 
-const fetch = (_: String) => null
+const fetch = (_: string) => null
 
-const getUserId = (state) => state.user.id
+const getUserId = state => state.user.id
 
 function* mySaga() {
   const userId = yield select(getUserId)
   yield call(fetch, `/users/${userId}`)
 }
 
-const mockStoreMiddleware = (state) => (next) => (effect) => {
+const mockStoreMiddleware = state => next => effect => {
   if (effect && effect[IO] && effect.type == 'SELECT') {
     const { selector, args } = effect.payload
     next(selector(state, ...args))
-  }
-  else next(effect)
+  } else next(effect)
 }
 
 describe('effectMiddleware', () => {

@@ -18,8 +18,13 @@ const def = (options: Partial<SagaTestOptions>): SagaTestOptions => {
   }
 }
 
-export default function sagaTestFactory<Ctx extends {}>(options: Partial<SagaTestOptions<Ctx>> = {}) {
-  return function createSagaTest<T extends any[] = any[]>(saga: SagaGeneratorFunction<T>, ...args: T): SagaTestIt<Ctx> {
+export default function sagaTestFactory<Ctx extends {}>(
+  options: Partial<SagaTestOptions<Ctx>> = {}
+) {
+  return function createSagaTest<T extends any[] = any[]>(
+    saga: SagaGeneratorFunction<T>,
+    ...args: T
+  ): SagaTestIt<Ctx> {
     return SagaTest.new(def(options), cloneableGenerator(saga)(...args))
   }
 }

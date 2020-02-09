@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- `forks` block function (#2cc9d)
-- typescript typings (#10ab0)
+- `forks` block function [2cc9d5a]
+- typescript typings [10ab025]
 
 ## v0.1.1

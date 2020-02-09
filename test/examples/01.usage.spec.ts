@@ -17,7 +17,6 @@ describe('usage', () => {
     const it = sagaTest(mySaga, 'https://example.com')
 
     it('calls an effect', ({ value: effect }) => {
-      console.log('lmaoo')
       effect.type.should.equal('CALL')
       effect.payload.fn.should.equal(fetch)
       effect.payload.args[0].should.equal('https://example.com')

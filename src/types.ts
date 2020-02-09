@@ -32,6 +32,7 @@ export interface TestEnv {
 export type SagaTestBlock<Ctx> = (state: SagaTestState<Ctx>, ...any: any[]) => any
 export type SagaTestBlockParams<Ctx> = [SagaTestState<Ctx>, ...any[]]
 export type SagaTestBlockFunction<Ctx> = BlockFunction<SagaTestBlockParams<Ctx>>
+
 export interface SagaTestIt<Ctx> extends It<SagaTestBlockParams<Ctx>> {
   setValue(value?): SagaTestIt<Ctx>
   replaceSaga(saga: SagaIteratorClone): SagaTestIt<Ctx>
@@ -40,13 +41,13 @@ export interface SagaTestIt<Ctx> extends It<SagaTestBlockParams<Ctx>> {
 }
 
 export interface SagaTestOptions<Ctx extends {} = any> {
-  context?: Ctx
-  middleware?: EffectMiddleware[],
+  middleware: EffectMiddleware[],
+  context: Ctx,
   env: TestEnv
 }
 
 export interface SagaTestState<Ctx extends {} = any> {
   done: Boolean,
-  value: any,
+  value: Effect,
   context: Ctx
 }

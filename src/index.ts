@@ -3,10 +3,12 @@ import SagaTest from './SagaTest'
 import contextMiddleware from './middleware/contextMiddleware'
 import { SagaTestOptions, SagaTestIt, GeneratorFn } from './types'
 
-const defaultDefaults = (options: Partial<SagaTestOptions>): SagaTestOptions => {
+const def = (options: Partial<SagaTestOptions>): SagaTestOptions => {
   const middleware = options.middleware || []
-  if (options.context) middleware.push(contextMiddleware(middleware))
+  if (options.context) middleware.push(contextMiddleware(options.context))
   return {
+    middleware,
+    context: {},
     env: {
       it: global.it,
       describe: global.describe,
@@ -17,8 +19,8 @@ const defaultDefaults = (options: Partial<SagaTestOptions>): SagaTestOptions => 
 }
 
 export default function sagaTestFactory<Ctx extends {}>(options: Partial<SagaTestOptions<Ctx>> = {}) {
-  return function creaateSagaTest<T extends any[] = any[]>(saga: GeneratorFn<T>, ...args: T): SagaTestIt<Ctx> {
-    return SagaTest.new(defaultDefaults(options), cloneableGenerator(saga)(...args))
+  return function createSagaTest<T extends any[] = any[]>(saga: GeneratorFn<T>, ...args: T): SagaTestIt<Ctx> {
+    return SagaTest.new(def(options), cloneableGenerator(saga)(...args))
   }
 }
 

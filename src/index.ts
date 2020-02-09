@@ -1,7 +1,7 @@
 import { cloneableGenerator } from '@redux-saga/testing-utils'
 import SagaTest from './SagaTest'
 import contextMiddleware from './middleware/contextMiddleware'
-import { SagaTestOptions, SagaTestIt, GeneratorFn } from './types'
+import { SagaTestOptions, SagaTestIt, SagaGeneratorFunction } from './types'
 
 const def = (options: Partial<SagaTestOptions>): SagaTestOptions => {
   const middleware = options.middleware || []
@@ -19,7 +19,7 @@ const def = (options: Partial<SagaTestOptions>): SagaTestOptions => {
 }
 
 export default function sagaTestFactory<Ctx extends {}>(options: Partial<SagaTestOptions<Ctx>> = {}) {
-  return function createSagaTest<T extends any[] = any[]>(saga: GeneratorFn<T>, ...args: T): SagaTestIt<Ctx> {
+  return function createSagaTest<T extends any[] = any[]>(saga: SagaGeneratorFunction<T>, ...args: T): SagaTestIt<Ctx> {
     return SagaTest.new(def(options), cloneableGenerator(saga)(...args))
   }
 }

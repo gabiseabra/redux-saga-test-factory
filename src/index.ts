@@ -1,13 +1,25 @@
 import { cloneableGenerator } from '@redux-saga/testing-utils'
-import SagaTest, { TestEnv, SagaTestOptions, SagaTestIt } from './SagaTest'
-export { default as contextMiddleware } from './middleware/contextMiddleware'
+import SagaTest from './SagaTest'
+import contextMiddleware from './middleware/contextMiddleware'
+import { SagaTestOptions, SagaTestIt, GeneratorFn } from './types'
 
-type GeneratorFn<T extends any[], RT = any> = (...args: T) => Generator<RT>
-
-export default <Ctx extends {}, It extends any[] = any[]>(options: Partial<SagaTestOptions<Ctx, It>> = {}) => <T extends any[] = any[]>(saga: GeneratorFn<T>, ...args: T): SagaTestIt<Ctx, It> => {
-  return SagaTest.new({
-    env: global as TestEnv<It>,
+const defaultDefaults = (options: Partial<SagaTestOptions>): SagaTestOptions => {
+  const middleware = options.middleware || []
+  if (options.context) middleware.push(contextMiddleware(middleware))
+  return {
+    env: {
+      it: global.it,
+      describe: global.describe,
+      before: global.before
+    },
     ...options
-  }, cloneableGenerator(saga)(...args))
+  }
 }
 
+export default function sagaTestFactory<Ctx extends {}>(options: Partial<SagaTestOptions<Ctx>> = {}) {
+  return function creaateSagaTest<T extends any[] = any[]>(saga: GeneratorFn<T>, ...args: T): SagaTestIt<Ctx> {
+    return SagaTest.new(defaultDefaults(options), cloneableGenerator(saga)(...args))
+  }
+}
+
+export { contextMiddleware }

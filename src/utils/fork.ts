@@ -1,9 +1,7 @@
 import eq from 'deep-equal'
 import { CallEffectDescriptor } from 'redux-saga/effects'
 import { Effect } from '@redux-saga/types'
-
-export type EffectMatcher = (action: Effect) => Boolean
-export type EffectExpectation<RT = any> = CallEffectDescriptor<RT> | EffectMatcher
+import { EffectExpectation } from '../types'
 
 export const describeEffect = (expectedEffect: EffectExpectation): string => {
   if (typeof expectedEffect === 'function') return 'expected effect'

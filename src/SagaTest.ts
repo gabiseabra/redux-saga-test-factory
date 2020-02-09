@@ -2,55 +2,27 @@
 import { IO } from '@redux-saga/symbols'
 import { EffectMiddleware } from "redux-saga"
 import { SagaIteratorClone } from '@redux-saga/testing-utils'
-import { It, BlockFunction, CallbackFunction } from './BlockClass'
 import contextMiddleware from './middleware/contextMiddleware'
+import { TestEnv, BlockFunction, SagaTestBlockFunction, SagaTestOptions, SagaTestState, SagaTestIt } from './types'
 
-export type SagaTestBlock<Ctx, It extends any[] = any[]> = (state: SagaTestState<Ctx>, ...any: It[]) => any
-export type SagaTestBlockParams<Ctx, It extends any[] = any[]> = [SagaTestState<Ctx>, ...It[]]
-export type SagaTestBlockFunction<Ctx, It extends any[] = any[]> = BlockFunction<SagaTestBlockParams<Ctx, It>>
-export interface SagaTestIt<Ctx, ItParams extends any[] = any[]> extends It<SagaTestBlockParams<Ctx, ItParams>> {
-  setValue(value?): SagaTestIt<Ctx, ItParams>
-  replaceSaga(saga: SagaIteratorClone): SagaTestIt<Ctx, ItParams>
-  runSaga(): SagaTestIt<Ctx, ItParams>
-  clone(value?): SagaTestIt<Ctx, ItParams>
-}
-
-export interface TestEnv<ItParams extends any[] = any[]> {
-  it: It<ItParams>
-  describe: BlockFunction
-  before: CallbackFunction
-}
-
-export interface SagaTestOptions<Ctx extends {}, ItParams extends any[] = any[]> {
-  context?: Ctx
-  middleware?: EffectMiddleware[],
-  env: TestEnv<ItParams>
-}
-
-export interface SagaTestState<Ctx extends {}> {
-  done: Boolean,
-  value: any,
-  context: Ctx
-}
-
-export default class SagaTest<Ctx extends {}, ItParams extends any[] = any[]> {
+export default class SagaTest<Ctx extends {}> {
   protected middleware: EffectMiddleware[]
-  protected env: TestEnv<ItParams>
+  protected env: TestEnv
   protected saga: SagaIteratorClone
 
   done: Boolean = false
   value: any
   context: Ctx
 
-  it: SagaTestBlockFunction<Ctx, ItParams>
-  only: SagaTestBlockFunction<Ctx, ItParams>
-  skip: SagaTestBlockFunction<Ctx, ItParams>
+  it: SagaTestBlockFunction<Ctx>
+  only: SagaTestBlockFunction<Ctx>
+  skip: SagaTestBlockFunction<Ctx>
 
-  static new<Ctx extends {}, ItParams extends any[] = any[]>(
-    options: SagaTestOptions<Ctx, ItParams>,
+  static new<Ctx extends {}>(
+    options: SagaTestOptions<Ctx>,
     saga: SagaIteratorClone,
     value?
-  ): SagaTestIt<Ctx, ItParams> {
+  ): SagaTestIt<Ctx> {
     const instance = new SagaTest(options, saga, value)
     return Object.assign(instance.it, {
       skip: instance.skip.bind(instance),
@@ -62,7 +34,7 @@ export default class SagaTest<Ctx extends {}, ItParams extends any[] = any[]> {
     })
   }
 
-  constructor(options: SagaTestOptions<Ctx, ItParams>, saga: SagaIteratorClone, value?) {
+  constructor(options: SagaTestOptions<Ctx>, saga: SagaIteratorClone, value?) {
     this.value = value
     this.context = options.context || {} as Ctx
     this.middleware = options.middleware || []
@@ -100,7 +72,7 @@ export default class SagaTest<Ctx extends {}, ItParams extends any[] = any[]> {
     return this
   }
 
-  protected enhanceIt(it: BlockFunction<ItParams>): SagaTestBlockFunction<Ctx, ItParams> {
+  protected enhanceIt(it: BlockFunction): SagaTestBlockFunction<Ctx> {
     return (desc, fn?) => {
       const runSaga = this.runSaga.bind(this)
       const getState = () => this.state
@@ -145,7 +117,7 @@ export default class SagaTest<Ctx extends {}, ItParams extends any[] = any[]> {
   }
   */
 
-  clone(value?): SagaTestIt<Ctx, ItParams> {
+  clone(value?): SagaTestIt<Ctx> {
     const sagaTest = SagaTest.new({
       context: this.context,
       middleware: this.middleware,

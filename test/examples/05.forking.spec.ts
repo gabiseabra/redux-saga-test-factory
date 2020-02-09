@@ -1,9 +1,8 @@
-import { all, call, put, fork, takeEvery } from 'redux-saga/effects'
+import { all, call, cps, put, fork, takeEvery } from 'redux-saga/effects'
 import { Action } from 'redux'
 import sagaTestFactory from '../../src'
 
 const ACTION_A = 'ACTION_A'
-const ACTION_B = 'ACTION_B'
 const RESPONSE = 'ACTION_RESPONSE'
 
 const response = value => ({ type: RESPONSE, value })
@@ -12,7 +11,7 @@ function* aSaga(_: Action) {
   yield put(response('A'))
 }
 
-function* bSaga(_: Action) {
+function* bSaga() {
   yield put(response('B'))
 }
 
@@ -21,10 +20,10 @@ const asyncFunction = () => Promise.resolve('asyncFunction')
 
 function* mainSaga() {
   yield all([
+    cps(syncFunction),
+    call(asyncFunction),
     takeEvery(ACTION_A, aSaga),
-    takeEvery(ACTION_B, bSaga),
-    call(syncFunction),
-    call(asyncFunction)
+    fork(bSaga)
   ])
 }
 
@@ -44,17 +43,13 @@ describe('context', () => {
       })
     })
 
-    it.forks(takeEvery(ACTION_B, bSaga), it => {
-      it('takes an ACTION_B', () => ({ type: ACTION_B }))
-
-      it.forks(fork(bSaga, { type: ACTION_B }))
-
+    it.forks(fork(bSaga), it => {
       it('yields a response of B', ({ value: { payload } }) => {
         payload.action.should.deep.equal(response('B'))
       })
     })
 
-    it.forks(call(syncFunction), it => {
+    it.forks(cps(syncFunction), it => {
       it('calls syncFunction', ({ value, done }) => {
         done.should.equal(true)
         value.should.equal('syncFunction')

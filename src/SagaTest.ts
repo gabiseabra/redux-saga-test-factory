@@ -25,9 +25,16 @@ const forksArgs = <
   ...args
 ): [string, EffectExpectation<T, RT>, Fn] => {
   if (typeof args[0] !== 'string') {
+    const expectedEffect: EffectExpectation<T, RT> = args[0]
     let verb = 'fork'
     if (!args[1]) verb += 's'
-    return [`${verb} ${describeEffect(args[0])}`, args[0], args[1]]
+    else if (typeof expectedEffect !== 'function')
+      verb = (expectedEffect.type as any).toLowerCase()
+    return [
+      `${verb} ${describeEffect(expectedEffect)}`,
+      expectedEffect,
+      args[1]
+    ]
   }
   return [args[0], args[1], args[2]]
 }

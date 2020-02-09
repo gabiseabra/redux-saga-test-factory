@@ -21,7 +21,7 @@ const mockStoreMiddleware = (state) => (next) => (effect) => {
 
 describe('effectMiddleware', () => {
   const sagaTest = sagaTestFactory({
-    effectMiddlewares: [
+    middleware: [
       mockStoreMiddleware({
         user: { id: 1 }
       })

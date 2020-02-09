@@ -22,15 +22,15 @@ describe('cloning', () => {
     it('calls fetch')
 
     it.clone('successful response', 'some result', it => {
-      it('puts successAction', ({ payload }) => {
-        payload.action.should.deep.equal(successAction('some result'))
+      it('puts successAction', effect => {
+        effect.should.deep.equal(put(successAction('some result')))
       })
     })
 
     const error = new Error()
     it.clone('error response', error, it => {
-      it('puts errorAction', ({ payload }) => {
-        payload.action.should.deep.equal(errorAction(error))
+      it('puts errorAction', effect => {
+        effect.should.deep.equal(put(errorAction(error)))
       })
     })
   })

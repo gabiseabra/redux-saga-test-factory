@@ -15,15 +15,13 @@ describe('usage', () => {
 
   sagaTest(mySaga, 'https://example.com').do(it => {
     it('calls an effect', effect => {
-      effect.type.should.equal('CALL')
-      effect.payload.fn.should.equal(fetch)
-      effect.payload.args[0].should.equal('https://example.com')
+      effect.should.deep.equal(call(fetch, 'https://example.com'))
 
       return 'response'
     })
 
-    it('puts successAction', ({ payload }) => {
-      payload.action.should.deep.equal(successAction('response'))
+    it('puts successAction', effect => {
+      effect.should.deep.equal(put(successAction('response')))
     })
   })
 })

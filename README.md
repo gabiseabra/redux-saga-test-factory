@@ -16,6 +16,7 @@ const successAction = (response) => ({type: 'SUCCESS', response})
 
 function* mySaga(url) {
   const response = yield call(fetch, url)
+  yield put(successAction(response))
 }
 
 sagaTest = sagaTestFactory()
@@ -23,16 +24,14 @@ sagaTest = sagaTestFactory()
 describe('mySaga', () => {
   const it = sagaTest(mySaga, 'https://example.com')
 
-  it('calls an effect', ({value: effect, done}) => {
-    effect.type.should.equal('CALL')
-    effect.payload.fn.should.equal(fetch)
-    effect.payload.args[0].should.equal('https://example.com')
+  it('calls an effect', (effect) => {
+    effect.should.deep.equal(call(fetch, 'https://example.com'))
 
     return 'response'
   })
 
-  it('puts successAction', ({value: {payload}}) => {
-    payload.action.should.deep.equal(successAction('response'))
+  it('puts successAction', (effect) => {
+    effect.should.deep.equal(put(successAction('response')))
   })
 })
 ```
@@ -80,8 +79,8 @@ describe('mySaga', () => {
   describe('successful response', () => {
     const it = mySagaTest.clone('some result')
 
-    it('puts successAction', ({value: {payload}}) => {
-      payload.action.should.deep.equal(successAction('some result'))
+    it('puts successAction', (effect) => {
+      effect.should.deep.equal(put(successAction('some result')))
     })
   })
 
@@ -89,8 +88,8 @@ describe('mySaga', () => {
     const error = new Error()
     const it = mySagaTest.clone(error)
 
-    it('puts errorAction', ({value: {payload}}) => {
-      payload.action.should.deep.equal(errorAction(error))
+    it('puts errorAction', (effect) => {
+      effect.should.deep.equal(put(errorAction(error)))
     })
   })
 })
@@ -127,7 +126,7 @@ Example usage:
 const ACTION_A = 'ACTION_A'
 const RESPONSE = 'ACTION_RESPONSE'
 
-const response = value => ({ type: RESPONSE, value })
+const response = value => ({type: RESPONSE, value})
 
 function* aSaga(_: Action) {
   yield put(response('A'))
@@ -147,11 +146,11 @@ describe('context', () => {
     const it = sagaTest(mainSaga)
 
     it.forks(takeEvery(ACTION_A, aSaga), it => {
-      it('takes an ACTION_A', () => ({ type: ACTION_A }))
+      it('takes an ACTION_A', () => ({type: ACTION_A}))
 
-      it.forks(fork(aSaga, { type: ACTION_A }))
+      it.forks(fork(aSaga, {type: ACTION_A}))
 
-      it('yields a response of A', ({ value: { payload } }) => {
+      it('yields a response of A', ({payload}) => {
         payload.action.should.deep.equal(response('A'))
       })
     })
@@ -175,7 +174,7 @@ function* mySaga(url) {
 }
 
 const apiClient = {
-  fetch() { return null }
+  fetch() {return null}
 }
 
 const sagaTest = sagaTestFactory({
@@ -188,8 +187,8 @@ describe('mySaga', () => {
   // GET_CONTEXT is intercepted by contextEffectMiddleware
   // it('gets apiClient from context')
 
-  it('calls apiClient.fetch', ({context, value: {payload}}) => {
-    payload.fn.should.equal(context.apiClient.fetch)
+  it('calls apiClient.fetch', (effect, {context}) => {
+    effect.should.deep.equal(call(apiClient.fetch, 'https://example.com'))
   })
 })
 ```

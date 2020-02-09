@@ -55,6 +55,8 @@ export interface SagaTestI<Ctx> {
   replaceSaga(saga: SagaIteratorClone): this
   runSaga(): this
   clone(value?): SagaTestIt<Ctx>
+  clone(desc: string, fn: SagaTestForkBlock<Ctx>): SagaTestIt<Ctx>
+  clone(desc: string, value: any, fn: SagaTestForkBlock<Ctx>): SagaTestIt<Ctx>
   forks<T, RT>(
     desc: string,
     expectedEffect: EffectExpectation<T, RT>,

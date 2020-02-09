@@ -16,12 +16,7 @@ import {
 } from './types'
 import { describeEffect, getForkedEffect, effectToIterator } from './utils/fork'
 
-const forksArgs = <
-  Ctx,
-  T,
-  RT,
-  Fn extends Callback = Callback<[SagaTestIt<Ctx>]>
->(
+const forksArgs = <Ctx, T, RT, Fn = Callback<[SagaTestIt<Ctx>]>>(
   ...args
 ): [string, EffectExpectation<T, RT>, Fn] => {
   if (typeof args[0] !== 'string') {
@@ -37,6 +32,16 @@ const forksArgs = <
     ]
   }
   return [args[0], args[1], args[2]]
+}
+
+const cloneArgs = <Ctx, Fn = Callback<[SagaTestIt<Ctx>]>>(
+  ...args
+): [string, any?, Fn?] => {
+  if (typeof args[0] === 'string' && typeof args[1] === 'function')
+    return [args[0], undefined, args[2]]
+  if (typeof args[0] === 'string' && typeof args[2] === 'function')
+    return [args[0], args[1], args[2]]
+  return ['', args[0]]
 }
 
 export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
@@ -151,8 +156,9 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
     return this
   }
 
-  clone(value?): SagaTestIt<Ctx> {
-    const sagaTest = SagaTest.new(
+  clone(...args): SagaTestIt<Ctx> {
+    const [desc, value, fn] = cloneArgs<Ctx>(...args)
+    const it = SagaTest.new(
       {
         context: this.context,
         middleware: this.middleware,
@@ -162,8 +168,15 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
       value || this.value
     )
 
-    this.env.before(() => sagaTest.replaceSaga(this.saga.clone()))
+    if (!fn) this.env.before(() => it.replaceSaga(this.saga.clone()))
+    else {
+      this.env.describe(desc, () => {
+        this.env.before(() => it.replaceSaga(this.saga.clone()))
 
-    return sagaTest
+        fn(it)
+      })
+    }
+
+    return it
   }
 }

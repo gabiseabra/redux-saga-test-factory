@@ -24,18 +24,14 @@ describe('cloning', () => {
 
     it('calls fetch')
 
-    describe('successful response', () => {
-      const it = mySagaTest.clone('some result')
-
+    it.clone('successful response', 'some result', it => {
       it('puts successAction', ({ value: { payload } }) => {
         payload.action.should.deep.equal(successAction('some result'))
       })
     })
 
-    describe('error response', () => {
-      const error = new Error()
-      const it = mySagaTest.clone(error)
-
+    const error = new Error()
+    it.clone('error response', error, it => {
       it('puts errorAction', ({ value: { payload } }) => {
         payload.action.should.deep.equal(errorAction(error))
       })

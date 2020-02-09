@@ -52,11 +52,11 @@ const isIter = <RT>(obj: any): obj is SagaIterator<RT> & Iter =>
 
 export const effectToIterator = <RT>(
   effect: CallEffectDescriptor<RT>
-): SagaIteratorClone => {
+): SagaIteratorClone & { name?: string } => {
   function* gen(): Iterator<RT> {
     const ret = effect.fn(...effect.args)
     if (isIter<RT>(ret)) yield* ret
     else return ret as RT
   }
-  return cloneableGenerator(gen)()
+  return Object.assign(cloneableGenerator(gen)(), { name: effect.fn.name })
 }

@@ -13,9 +13,7 @@ function* mySaga(url: string) {
 describe('usage', () => {
   const sagaTest = sagaTestFactory()
 
-  describe('mySaga', () => {
-    const it = sagaTest(mySaga, 'https://example.com')
-
+  sagaTest(mySaga, 'https://example.com').do(it => {
     it('calls an effect', ({ value: effect }) => {
       effect.type.should.equal('CALL')
       effect.payload.fn.should.equal(fetch)

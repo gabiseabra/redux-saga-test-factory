@@ -18,10 +18,7 @@ function* mySaga(url) {
 describe('cloning', () => {
   const sagaTest = sagaTestFactory()
 
-  describe('mySaga', () => {
-    const mySagaTest = sagaTest(mySaga, 'https://example.com')
-    const it = mySagaTest
-
+  sagaTest(mySaga, 'https://example.com').do(it => {
     it('calls fetch')
 
     it.clone('successful response', 'some result', it => {

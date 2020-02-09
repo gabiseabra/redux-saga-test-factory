@@ -26,7 +26,8 @@ export default function sagaTestFactory<Ctx extends {}>(
     saga: SagaGeneratorFunction<RT, Args>,
     ...args: Args
   ): SagaTestIt<Ctx> {
-    return SagaTest.new(def(options), cloneableGenerator(saga)(...args))
+    const iter = cloneableGenerator(saga)(...args)
+    return SagaTest.new(def(options), Object.assign(iter, { name: saga.name }))
   }
 }
 

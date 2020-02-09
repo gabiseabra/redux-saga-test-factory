@@ -10,44 +10,15 @@ import {
   SagaTestOptions,
   SagaTestState,
   SagaTestIt,
-  SagaTestI,
-  EffectExpectation,
-  Callback
+  SagaTestI
 } from './types'
-import { describeEffect, getForkedEffect, effectToIterator } from './utils/fork'
-
-const forksArgs = <Ctx, T, RT, Fn = Callback<[SagaTestIt<Ctx>]>>(
-  ...args
-): [string, EffectExpectation<T, RT>, Fn] => {
-  if (typeof args[0] !== 'string') {
-    const expectedEffect: EffectExpectation<T, RT> = args[0]
-    let verb = 'fork'
-    if (!args[1]) verb += 's'
-    else if (typeof expectedEffect !== 'function')
-      verb = (expectedEffect.type as any).toLowerCase()
-    return [
-      `${verb} ${describeEffect(expectedEffect)}`,
-      expectedEffect,
-      args[1]
-    ]
-  }
-  return [args[0], args[1], args[2]]
-}
-
-const cloneArgs = <Ctx, Fn = Callback<[SagaTestIt<Ctx>]>>(
-  ...args
-): [string, any?, Fn?] => {
-  if (typeof args[0] === 'string' && typeof args[1] === 'function')
-    return [args[0], undefined, args[2]]
-  if (typeof args[0] === 'string' && typeof args[2] === 'function')
-    return [args[0], args[1], args[2]]
-  return ['', args[0]]
-}
+import { getForkedEffect, effectToIterator } from './utils/fork'
+import { forksArgs, cloneArgs, doArgs } from './utils/arguments'
 
 export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
   protected middleware: EffectMiddleware[]
   protected env: TestEnv
-  protected saga: SagaIteratorClone
+  protected saga: SagaIteratorClone & { name?: string }
 
   value
   done = false
@@ -59,12 +30,13 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
 
   static new<Ctx extends {}>(
     options: SagaTestOptions<Ctx>,
-    saga: SagaIteratorClone,
+    saga: SagaIteratorClone & { name?: string },
     value?
   ): SagaTestIt<Ctx> {
     const instance = new SagaTest(options, saga, value)
     return Object.assign(instance.__call__, {
       __call__: instance.__call__.bind(instance),
+      do: instance.do.bind(instance),
       skip: instance.skip.bind(instance),
       only: instance.only.bind(instance),
       forks: instance.forks.bind(instance),
@@ -75,7 +47,11 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
     })
   }
 
-  constructor(options: SagaTestOptions<Ctx>, saga: SagaIteratorClone, value?) {
+  constructor(
+    options: SagaTestOptions<Ctx>,
+    saga: SagaIteratorClone & { name?: string },
+    value?
+  ) {
     this.value = value
     this.context = options.context || ({} as Ctx)
     this.middleware = options.middleware || []
@@ -129,9 +105,15 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
     return this
   }
 
-  replaceSaga(saga: SagaIteratorClone) {
+  replaceSaga(saga: SagaIteratorClone & { name?: string }) {
+    if (typeof saga.name === 'undefined') saga.name = this.saga.name
     this.saga = saga
     return this
+  }
+
+  do(...args) {
+    const [desc, fn] = doArgs(...args)
+    return this.clone(desc || this.saga.name || '', undefined, fn)
   }
 
   forks<T, RT>(...args) {

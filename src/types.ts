@@ -132,12 +132,39 @@ export interface SagaTestI<Ctx> {
    * yielded from that generator.
    * @param saga Cloneable SagaIterator that replaces the current one
    */
-  replaceSaga(saga: SagaIteratorClone): this
+  replaceSaga(saga: SagaIteratorClone & { name?: string }): this
   /**
    * ## Branching methods
-   * These methods create a new instance of `SagaTestIt` with state cloned from
-   * the original instance of it. They work like describe blocks.
+   * These methods act as `it` and `describe` for running a block of code with
+   * a new instance of `SagaTestIt` with state cloned from the originating
+   * `SagaTestIt`.
    * ------------------------------------------------------------------------ */
+  /**
+   * Runs the code in a describe block with a new instance of `SagaTestIt`. This
+   * is a slightly modified alias for `clone` that serves as sugar for
+   * instantiating a saga test in a describe block.
+   * ```js
+   * describe('mySaga', () => {
+   *   const it = sagaTest(mySaga, ...args)
+   *   // ...
+   * })
+   * ```
+   * becomes
+   * ```js
+   * sagaTest('mySaga', ...args).do((it) => {
+   *   // ...
+   * })
+   * ```
+   * @param desc Block's description
+   * @param fn   Block that runs with `SagaTestIt`
+   */
+  do(desc: string, fn: SagaTestForkBlock<Ctx>): SagaTestIt<Ctx>
+  /**
+   * A description is generated from the saga's function name if none i
+   * provided.
+   * @param fn Block that runs with `SagaTestIt`
+   */
+  do(fn: SagaTestForkBlock<Ctx>): SagaTestIt<Ctx>
   /**
    * `sagaTest.clone` branches the `sagaTest` into another instance of itself
    * with the same sate, which runs without affecting the state of the original

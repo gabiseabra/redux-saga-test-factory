@@ -16,7 +16,7 @@ function* bSaga(_: Action) {
   yield put(response('B'))
 }
 
-function* mainSaga(_: Action) {
+function* mainSaga() {
   yield all([
     takeEvery(ACTION_A, aSaga),
     takeEvery(ACTION_B, bSaga),

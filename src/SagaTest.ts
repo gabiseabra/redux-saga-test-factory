@@ -20,7 +20,9 @@ const forksArgs = <Ctx, RT, Fn extends Callback = Callback<[SagaTestIt<Ctx>]>>(
   ...args
 ): [string, EffectExpectation<RT>, Fn] => {
   if (typeof args[0] !== 'string') {
-    return [`fork ${describeEffect(args[0])}`, args[0], args[1]]
+    let verb = 'fork'
+    if (!args[1]) verb += 's'
+    return [`${verb} ${describeEffect(args[0])}`, args[0], args[1]]
   }
   return [args[0], args[1], args[2]]
 }

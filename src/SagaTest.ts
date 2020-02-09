@@ -16,9 +16,14 @@ import {
 } from './types'
 import { describeEffect, getForkedEffect, effectToIterator } from './utils/fork'
 
-const forksArgs = <Ctx, RT, Fn extends Callback = Callback<[SagaTestIt<Ctx>]>>(
+const forksArgs = <
+  Ctx,
+  T,
+  RT,
+  Fn extends Callback = Callback<[SagaTestIt<Ctx>]>
+>(
   ...args
-): [string, EffectExpectation<RT>, Fn] => {
+): [string, EffectExpectation<T, RT>, Fn] => {
   if (typeof args[0] !== 'string') {
     let verb = 'fork'
     if (!args[1]) verb += 's'
@@ -117,8 +122,8 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
     return this
   }
 
-  forks<RT>(...args) {
-    const [desc, expectedEffect, fn] = forksArgs<Ctx, RT>(...args)
+  forks<T, RT>(...args) {
+    const [desc, expectedEffect, fn] = forksArgs<Ctx, T, RT>(...args)
     const getMyForkedAction = getForkedEffect(expectedEffect)
     const testBlock = <ST extends SagaTestI<Ctx>>(desc_, it: ST) => {
       it.__call__(desc_, ({ value }) => {

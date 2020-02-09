@@ -205,6 +205,11 @@ Middlewares have the same signature as a redux-saga `EffectMiddleware`, and must
 
 This can be used to mock effects such as selecting a value from the store:
 
+### env
+
+Object with hooks from test runner's environment, falls back to get values from `global`.
+Required properties are `{ it, describe, before }`
+
 ```js
 // Resolves select effect with values from a state object
 const mockStoreMiddleware = (state) => (next) => (effect) => {

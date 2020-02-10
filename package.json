@@ -8,6 +8,13 @@
     "type": "git",
     "url": "https://github.com/gabiseabra/redux-saga-test-factory.git"
   },
+  "keywords": [
+    "test",
+    "redux-saga",
+    "mock",
+    "mocha",
+    "jest"
+  ],
   "scripts": {
     "prepublish": "yarn build",
     "build": "yarn clean && tsc",

@@ -29,7 +29,8 @@ export const describeEffect = (expectedEffect: EffectExpectation): string => {
 }
 
 /**
- *
+ * Gets a call effect descriptor from an arbitrary effect that matches some
+ * expected effect.
  * @param expectedEffect
  */
 export const matchCallEffect = <T, RT>(
@@ -55,6 +56,10 @@ export const matchCallEffect = <T, RT>(
   }
 }
 
+/**
+ * Creates an iterator that executes a call effect.
+ * @param effect
+ */
 export const effectToIterator = <RT>(
   effect: CallEffectDescriptor<RT>
 ): SagaIteratorClone & { name?: string } => {

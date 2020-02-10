@@ -1,3 +1,7 @@
+/**
+ * Helpers that operate on the `it` object.
+ * @module SagaTest/utils/tests
+ */
 import AssertionError from 'assertion-error'
 import { IO } from '@redux-saga/symbols'
 import { Effect } from '@redux-saga/types'
@@ -16,6 +20,37 @@ import SagaTestRunner from '../Runner'
 const isDoneOrIO = (effect: Effect, { done }): boolean =>
   done || (effect && effect[IO])
 
+const runTestIterator = <Ctx>({ saga }: SagaTestI<Ctx>, gen: Iterator<any>) => {
+  const runner = new SagaTestRunner(gen, [], saga.context, saga.value)
+  const iter = SagaTestRunner.CoIterator(
+    [runner, saga],
+    saga.context,
+    saga.value
+  )
+
+  iter.nextUntil((_, state) => state.done)
+
+  if (!runner.done) {
+    runner.next(
+      new AssertionError(
+        'Did not finish running test generator, saga finished first.',
+        {
+          sagaResult: saga.result,
+          testResult: runner.result
+        }
+      )
+    )
+  }
+
+  return iter.value
+}
+
+/**
+ * Creates an async it block that runs a function with context from a
+ * `SagaTestI` and handles `SagaTestIterable` ret values (generator, async).
+ * @param it
+ * @param testFn
+ */
 export const runTest = <Ctx>(
   it: SagaTestI<Ctx>,
   testFn: SagaTestItBlock<Ctx>
@@ -23,26 +58,8 @@ export const runTest = <Ctx>(
   async function runMyTest(...args) {
     it.saga.nextUntil(isDoneOrIO)
     const ret = testFn(it.value, it.state, ...args)
-    if (!isIter(ret)) return ret
-    const runner = new SagaTestRunner(ret, [], it.saga.context, it.value)
-    const iter = SagaTestRunner.CoIterator(
-      [runner, it.saga],
-      it.saga.context,
-      it.saga.value
-    )
-    iter.nextUntil((_, state) => state.done)
-    if (!runner.done) {
-      runner.next(
-        new AssertionError(
-          'Did not finish running test generator, saga finished first.',
-          {
-            sagaResult: it.saga.result,
-            testResult: runner.result
-          }
-        )
-      )
-    }
-    return iter.value
+    if (isIter(ret)) return runTestIterator(it, ret)
+    return ret
   }
 
   return async (...args) => {

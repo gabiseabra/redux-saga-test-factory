@@ -159,6 +159,33 @@ describe('context', () => {
 ```
 [See full example](test/examples/05.forking.spec.ts)
 
+## Async tests
+
+The saga test runner handles plain, async and generator tests. Async and plain functions get handled as usual by the test runner's `it` while generators get some special treatment.
+
+When a saga test's `it` block is a generator function it iterates over the saga and receives its yielded effects, and then yields something back in response.
+
+```js
+// ...
+
+function* mySaga(url: string) {
+  const response = yield call(fetch, url)
+  yield put(successAction(response))
+}
+
+describe('generator', () => {
+  const sagaTest = sagaTestFactory()
+
+  sagaTest(mySaga, 'https://example.com').do(it => {
+    it('yields values between test and saga', function* _(effect) {
+      expect(effect).to.deep.equal(call(fetch, 'https://example.com'))
+      expect(yield 'response').to.deep.equal(put(successAction('response')))
+    })
+  })
+})
+```
+[See full example](test/examples/06.generator.spec.ts)
+
 ## Options
 
 ### context

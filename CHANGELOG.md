@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.1.0
 
 - async and generator test runner
 - remove value from `SagaTestState` and change signature of `SagaTestItBlock`

@@ -18,6 +18,7 @@
   "dependencies": {
     "@redux-saga/symbols": "^1.1.0",
     "@redux-saga/testing-utils": "^1.1.1",
+    "assertion-error": "^1.1.0",
     "deep-equal": "^2.0.1"
   },
   "devDependencies": {

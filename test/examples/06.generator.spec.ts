@@ -1,3 +1,4 @@
+import AssertionError = require('assertion-error')
 import { call, put } from 'redux-saga/effects'
 import { expect } from 'chai'
 import sagaTestFactory from '../../src'
@@ -42,7 +43,7 @@ describe('generator', () => {
         } catch (e) {
           error = e
         }
-        expect(error).to.be.instanceOf(Error)
+        expect(error).to.be.instanceOf(AssertionError)
       })
     })
   })

@@ -45,6 +45,10 @@ export default class SagaTestRunner<
     return { done: this.done, context: this.context }
   }
 
+  get result(): IteratorResult<any> {
+    return { done: this.done, value: this.value }
+  }
+
   run(value?) {
     if (typeof value !== 'undefined') this.value = value
     const state =

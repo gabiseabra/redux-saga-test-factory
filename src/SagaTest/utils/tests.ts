@@ -1,3 +1,4 @@
+import AssertionError from 'assertion-error'
 import { IO } from '@redux-saga/symbols'
 import { Effect } from '@redux-saga/types'
 import { isIter } from './generator'
@@ -32,9 +33,12 @@ export const runTest = <Ctx>(
     iter.runUntil((_, state) => state.done)
     if (!runner.done) {
       runner.run(
-        new Error(
-          "Didn't finish running test generator. Saga finished first with return value " +
-          JSON.stringify(it.value)
+        new AssertionError(
+          'Did not finish running test generator, saga finished first.',
+          {
+            sagaResult: it.saga.result,
+            testResult: runner.result
+          }
         )
       )
     }

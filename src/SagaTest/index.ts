@@ -1,5 +1,5 @@
+import AssertionError from 'assertion-error'
 import { SagaIteratorClone } from '@redux-saga/testing-utils'
-import contextMiddleware from '../middleware/contextMiddleware'
 import {
   TestEnv,
   SagaTestItFunction,
@@ -61,7 +61,11 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
     const testBlock = <ST extends SagaTestI<Ctx>>(desc_, it: ST) => {
       it.__call__(desc_, effect => {
         const forkedAction = matchMyCallEffect(effect)
-        if (!forkedAction) throw new Error("Action wasn't forked")
+        if (!forkedAction)
+          throw new AssertionError("Action wasn't forked", {
+            expectedEffect,
+            effect
+          })
         it.saga.replace(effectToIterator(forkedAction))
       })
     }

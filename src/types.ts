@@ -88,6 +88,7 @@ export interface SagaTestRunnerI<
   done: boolean
   context: Ctx
   gen: Iter
+  result: IteratorResult<any>
   /**
    * Runs the generator through one iteration and updates it's state.
    * @param value

@@ -1,6 +1,6 @@
 /**
  * Helpers for `SagaTestI`'s fork method that handle redux saga effects.
- * @module utils/arguments
+ * @module SagaTest/utils/fork
  */
 import eq from 'deep-equal'
 import { CallEffectDescriptor } from 'redux-saga/effects'

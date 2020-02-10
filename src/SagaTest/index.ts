@@ -1,5 +1,3 @@
-import { EffectMiddleware } from 'redux-saga'
-import { Effect } from '@redux-saga/types'
 import { SagaIteratorClone } from '@redux-saga/testing-utils'
 import contextMiddleware from '../middleware/contextMiddleware'
 import {
@@ -7,7 +5,8 @@ import {
   SagaTestItFunction,
   SagaTestOptions,
   SagaTestState,
-  SagaTestI
+  SagaTestI,
+  SagaTestIt
 } from '../types'
 import { itFactory, enhanceIt } from './utils/tests'
 import { matchCallEffect, effectToIterator } from './utils/fork'
@@ -20,22 +19,23 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
 
   __call__: SagaTestItFunction<Ctx>
 
-  static new = itFactory(SagaTest, options => options.env.it)
-
-  constructor(
+  static new: <Ctx>(
     options: SagaTestOptions<Ctx>,
     saga: SagaIteratorClone & { name?: string },
-    value?
+    value?: any
+  ) => SagaTestIt<Ctx> = itFactory(SagaTest, options => options.env.it)
+
+  constructor(
+    protected options: SagaTestOptions<Ctx>,
+    saga: SagaIteratorClone & { name?: string },
+    value?: any
   ) {
-    // SagaTest context
     this.env = options.env
     this.__call__ = enhanceIt(this, this.env.it)
-    // SagaRunner context
-    const middleware = options.middleware || []
-    if (options.context && !options.middleware)
-      middleware.push(contextMiddleware(options.context))
-
-    this.saga = new Runner(saga, middleware, options.context, value)
+    this.saga =
+      saga instanceof Runner
+        ? saga
+        : new Runner(saga, options.middleware, options.context, value)
   }
 
   get value() {
@@ -79,12 +79,12 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
 
   clone(...args) {
     const [desc, value, fn] = cloneArgs<Ctx>(...args)
-    const it = SagaTest.new(this, this.saga, value || this.value)
-
-    if (!fn) this.env.before(() => it.saga.replace(this.saga.gen.clone()))
+    const it = SagaTest.new(this.options, this.saga.gen, value || this.value)
+    const beforeHook = () => it.saga.replace(this.saga.gen.clone(), this.value)
+    if (!fn) this.env.before(beforeHook)
     else
       this.env.describe(desc, () => {
-        this.env.before(() => it.saga.replace(this.saga.gen.clone()))
+        this.env.before(beforeHook)
         fn(it)
       })
 

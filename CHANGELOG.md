@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- async and generator test runner
 - remove value from `SagaTestState` and change signature of `SagaTestItBlock`
 - `do` block function
 

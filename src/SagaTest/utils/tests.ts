@@ -10,6 +10,7 @@ import {
   Ctor,
   It
 } from '../../types'
+import SagaTestRunner from '../Runner'
 
 const isDoneOrIO = (effect: Effect, { done }): boolean =>
   done || (effect && effect[IO])
@@ -22,6 +23,22 @@ export const runTest = <Ctx>(
     it.saga.runUntil(isDoneOrIO)
     const ret = testFn(it.value, it.state, ...args)
     if (!isIter(ret)) return ret
+    const runner = new SagaTestRunner(ret, [], it.saga.context, it.value)
+    const iter = SagaTestRunner.CoIterator(
+      [runner, it.saga],
+      it.saga.context,
+      it.saga.value
+    )
+    iter.runUntil((_, state) => state.done)
+    if (!runner.done) {
+      runner.run(
+        new Error(
+          "Didn't finish running test generator. Saga finished first with return value " +
+          JSON.stringify(it.value)
+        )
+      )
+    }
+    return iter.value
   }
 
   return async (...args) => {

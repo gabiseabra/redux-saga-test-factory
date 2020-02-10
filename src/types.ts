@@ -82,16 +82,17 @@ export interface TestEnv {
  */
 export interface SagaTestRunnerI<
   Ctx extends {},
-  T extends SagaIterator = SagaIterator
+  Iter extends Iterator<Effect> = SagaIterator
   > {
   value?: any
   done: boolean
   context: Ctx
-  gen: T
+  gen: Iter
   /**
    * Runs the generator through one iteration and updates it's state.
+   * @param value
    */
-  run(): this
+  run(value?): this
   runWhile(cond: (...args: SagaTestItBlockParams<Ctx>) => boolean): this
   runUntil(cond: (...args: SagaTestItBlockParams<Ctx>) => boolean): this
   /**
@@ -99,7 +100,7 @@ export interface SagaTestRunnerI<
    * values yielded from that generator.
    * @param gen SagaIterator that replaces the current one
    */
-  replace(gen: T): this
+  replace(gen: Iter, value?): this
 }
 
 /*
@@ -115,11 +116,13 @@ export type SagaGeneratorFunction<RT = any, Args extends any[] = any[]> = (
  * A callback for a contextual block function. It takes a SagaTestState plus
  * whatever other arguments `it()` provides.
  */
-export type SagaTestItBlock<Ctx> = (
+export type SagaTestItBlock<Ctx, RT = any> = (
   effect: Effect,
   state: SagaTestState<Ctx>,
   ...any: any[]
-) => Iterator<Effect> | Promise<any> | any
+) => SagaTestIterable<RT>
+
+export type SagaTestIterable<RT> = Iterator<Effect, RT> | Promise<RT> | RT
 
 export type SagaTestItBlockParams<Ctx> = Parameters<SagaTestItBlock<Ctx>>
 

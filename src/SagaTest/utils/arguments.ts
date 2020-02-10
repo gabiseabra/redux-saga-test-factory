@@ -1,6 +1,6 @@
 /**
  * Parsers for `SagaTestI`'s polymorphic functions.
- * @module utils/arguments
+ * @module SagaTest/utils/arguments
  */
 import { SagaTestIt, EffectExpectation, Callback } from '../../types'
 import { describeEffect } from './fork'
@@ -27,7 +27,7 @@ export function cloneArgs<Ctx, Fn = Callback<[SagaTestIt<Ctx>]>>(
   ...args
 ): [string, any?, Fn?] {
   if (typeof args[0] === 'string' && typeof args[1] === 'function')
-    return [args[0], undefined, args[2]]
+    return [args[0], undefined, args[1]]
   if (typeof args[0] === 'string' && typeof args[2] === 'function')
     return [args[0], args[1], args[2]]
   return ['', args[0]]

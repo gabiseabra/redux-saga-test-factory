@@ -4,12 +4,13 @@ import { SagaTestRunnerI, SagaTestState } from '../types'
 
 export default class SagaTestRunner<
   Ctx extends {},
-  T extends Iterator<Effect> = SagaIterator
-  > implements SagaTestRunnerI<Ctx, T> {
+  Iter extends Iterator<Effect> = SagaIterator
+  > implements SagaTestRunnerI<Ctx, Iter> {
   done = false
+  iterations = 0
 
   constructor(
-    public gen: T,
+    public gen: Iter,
     protected middleware: EffectMiddleware[],
     public context: Ctx,
     public value?
@@ -24,7 +25,7 @@ export default class SagaTestRunner<
    * @param initialValue
    */
   static CoIterator<Ctx extends {}>(
-    runners: SagaTestRunnerI<Ctx>[],
+    runners: SagaTestRunnerI<Ctx, any>[],
     context: Ctx,
     initialValue?
   ): SagaTestRunner<Ctx> {
@@ -32,13 +33,17 @@ export default class SagaTestRunner<
       let value = initialValue || runners[0].value
       while (1) {
         for (const r of runners) {
-          r.run(value)
+          r.next(value)
           if (r.done) return r.value
           value = yield r.value
         }
       }
     }
     return new SagaTestRunner(gen(), [], context)
+  }
+
+  [Symbol.iterator]() {
+    return this
   }
 
   get state(): SagaTestState<Ctx> {
@@ -49,7 +54,7 @@ export default class SagaTestRunner<
     return { done: this.done, value: this.value }
   }
 
-  run(value?) {
+  next(value?) {
     if (typeof value !== 'undefined') this.value = value
     const state =
       this.value instanceof Error && this.gen.throw
@@ -57,16 +62,19 @@ export default class SagaTestRunner<
         : this.gen.next(this.value)
     this.value = this.applyMiddleware(state.value)
     this.done = Boolean(state.done)
+    this.iterations++
+    return this.result
+  }
+
+  throw = this.next
+
+  nextWhile(cond) {
+    while (cond(this.value, this.state)) this.next()
     return this
   }
 
-  runWhile(cond) {
-    while (cond(this.value, this.state)) this.run()
-    return this
-  }
-
-  runUntil(cond) {
-    while (!cond(this.value, this.state)) this.run()
+  nextUntil(cond) {
+    while (!cond(this.value, this.state)) this.next()
     return this
   }
 

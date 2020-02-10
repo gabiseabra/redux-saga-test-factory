@@ -72,33 +72,28 @@ export interface TestEnv {
  * -------------------------------------------------------------------------- */
 
 /**
- * TODO rewords
- * A stateful saga runner.
- * These methods mutate the state of the current saga test. They should run
- * inside of an `ItBlockFunction` or `HookFunction` to ensure it respects the
- * test's life cycle.
+ * A stateful iterator runner. It stores the state of a generator and values
+ * yielded to/from it.
+ * `SagaTestRunnerI` iterators should run inside of an `ItBlockFunction` or
+ * `HookFunction` to ensure it respects the test's life cycle.
  * Using it from a "describe" block causes the state to mutate before the
  * tests start running.
  */
 export interface SagaTestRunnerI<
   Ctx extends {},
-  Iter extends Iterator<Effect> = SagaIterator
-  > {
+  RT = any,
+  Iter extends Iterator<any, RT> = SagaIterator<RT>
+  > extends Iterator<any, RT> {
   value?: any
-  done: boolean
   context: Ctx
-  gen: Iter
-  result: IteratorResult<any>
+  readonly done: boolean
+  readonly result: IteratorResult<any, RT>
+  readonly gen: Iter
+  readonly iterations: number
+  nextWhile(predicate: (...args: SagaTestItBlockParams<Ctx>) => boolean): this
+  nextUntil(predicate: (...args: SagaTestItBlockParams<Ctx>) => boolean): this
   /**
-   * Runs the generator through one iteration and updates it's state.
-   * @param value
-   */
-  run(value?): this
-  runWhile(cond: (...args: SagaTestItBlockParams<Ctx>) => boolean): this
-  runUntil(cond: (...args: SagaTestItBlockParams<Ctx>) => boolean): this
-  /**
-   * Replaces the generator on the runner's context. Tests will resume with
-   * values yielded from that generator.
+   * Replaces the generator on the runner's context and preserves the state.
    * @param gen SagaIterator that replaces the current one
    */
   replace(gen: Iter, value?): this
@@ -114,16 +109,19 @@ export type SagaGeneratorFunction<RT = any, Args extends any[] = any[]> = (
 ) => SagaIterator<RT>
 
 /**
- * A callback for a contextual block function. It takes a SagaTestState plus
- * whatever other arguments `it()` provides.
+ * Values that can be handled by `SagaTestI`'s test runner.
+ */
+export type SagaTestIterable<RT> = Iterator<Effect, RT> | Promise<RT> | RT
+
+/**
+ * A callback for `SagaTestI`'s `it` block function. It takes a `SagaTestState`
+ * plus whatever other arguments it() provides.
  */
 export type SagaTestItBlock<Ctx, RT = any> = (
   effect: Effect,
   state: SagaTestState<Ctx>,
   ...any: any[]
 ) => SagaTestIterable<RT>
-
-export type SagaTestIterable<RT> = Iterator<Effect, RT> | Promise<RT> | RT
 
 export type SagaTestItBlockParams<Ctx> = Parameters<SagaTestItBlock<Ctx>>
 
@@ -154,21 +152,18 @@ export interface SagaTestState<Ctx extends {} = any> {
 }
 
 /**
- * TODO rewords
- * Saga test runner which holds state from a saga's generator.
- * These methods act as `it` and `describe` for running a block of code with
- * a new instance of `SagaTestIt` with state cloned from the originating
- * `SagaTestIt`.
+ * Saga *test* runner. It provides some methods that act as `it` and `describe`
+ * to run tests on a saga generator.
  * -------------------------------------------------------------------------- */
 export interface SagaTestI<Ctx> {
   __call__: SagaTestItFunction<Ctx>
   value: any
   readonly state: SagaTestState<Ctx>
-  saga: SagaTestRunnerI<Ctx>
+  saga: SagaTestRunnerI<Ctx, Effect, SagaIteratorClone & { name?: string }>
   /**
    * Runs the code in a describe block with a new instance of `SagaTestIt`. This
-   * is a slightly modified alias for `clone` that serves as sugar for
-   * instantiating a saga test in a describe block.
+   * is a slightly modified alias for `clone` that serves as syntactic sugar for
+   * initializing context of a SagaTest in a describe block.
    * ```js
    * describe('mySaga', () => {
    *   const it = sagaTest(mySaga, ...args)
@@ -177,7 +172,7 @@ export interface SagaTestI<Ctx> {
    * ```
    * becomes
    * ```js
-   * sagaTest('mySaga', ...args).do((it) => {
+   * sagaTest(mySaga, ...args).do((it) => {
    *   // ...
    * })
    * ```
@@ -186,16 +181,15 @@ export interface SagaTestI<Ctx> {
    */
   do(desc: string, fn: SagaTestForkBlock<Ctx>): SagaTestIt<Ctx>
   /**
-   * A description is generated from the saga's function name if none i
+   * A description is generated from the saga's function name if none is
    * provided.
    * @param fn Block that runs with `SagaTestIt`
    */
   do(fn: SagaTestForkBlock<Ctx>): SagaTestIt<Ctx>
   /**
-   * `sagaTest.clone` branches the `sagaTest` into another instance of itself
-   * with the same sate, which runs without affecting the state of the original
-   * one. It may take a value to override the value resolved from the previous
-   * test before resuming.
+   * Branches `SagaTestI` into another instance of itself with the same sate,
+   * which runs without affecting the state of the original one. It may take a
+   * value to override the one resolved from the previous test before resuming.
    * @param value Value to yield back to the next iteration
    */
   clone(value?): SagaTestIt<Ctx>
@@ -207,14 +201,14 @@ export interface SagaTestI<Ctx> {
    */
   clone(desc: string, fn: SagaTestForkBlock<Ctx>): SagaTestIt<Ctx>
   /**
-   * Pass a value to `clone` and `setValue` to the next SagaTestIt in one go.
+   * Pass a value to `clone` and set value to the next SagaTestIt in one go.
    * @param desc  Block's description
    * @param value Next value
    * @param fn    Block that runs with a branched `SagaTestIt`
    */
   clone(desc: string, value: any, fn: SagaTestForkBlock<Ctx>): SagaTestIt<Ctx>
   /**
-   * Tests that an effect is called by checking the current state against a
+   * Tests that an effect is called by checking the next effect against a
    * matcher, and then replaces the `SagaTestI` instance's iterator with a new
    * iterator of the forked function.
    * When a callback is provided, the `SagaTestI` first is cloned and then it

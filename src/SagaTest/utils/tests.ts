@@ -21,7 +21,7 @@ export const runTest = <Ctx>(
   testFn: SagaTestItBlock<Ctx>
 ) => {
   async function runMyTest(...args) {
-    it.saga.runUntil(isDoneOrIO)
+    it.saga.nextUntil(isDoneOrIO)
     const ret = testFn(it.value, it.state, ...args)
     if (!isIter(ret)) return ret
     const runner = new SagaTestRunner(ret, [], it.saga.context, it.value)
@@ -30,9 +30,9 @@ export const runTest = <Ctx>(
       it.saga.context,
       it.saga.value
     )
-    iter.runUntil((_, state) => state.done)
+    iter.nextUntil((_, state) => state.done)
     if (!runner.done) {
-      runner.run(
+      runner.next(
         new AssertionError(
           'Did not finish running test generator, saga finished first.',
           {

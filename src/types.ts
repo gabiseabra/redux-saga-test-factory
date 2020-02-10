@@ -4,6 +4,15 @@ import { EffectMiddleware } from 'redux-saga'
 import { SagaIteratorClone } from '@redux-saga/testing-utils'
 
 /*
+ * ## Generics
+ * -------------------------------------------------------------------------- */
+
+/** */
+export interface Ctor<RT, Args extends any[]> {
+  new(...args: Args): RT
+}
+
+/*
  * ## Effects
  * -------------------------------------------------------------------------- */
 
@@ -59,6 +68,41 @@ export interface TestEnv {
 }
 
 /*
+ * ## SagaTestRunner
+ * -------------------------------------------------------------------------- */
+
+/**
+ * TODO rewords
+ * A stateful saga runner.
+ * These methods mutate the state of the current saga test. They should run
+ * inside of an `ItBlockFunction` or `HookFunction` to ensure it respects the
+ * test's life cycle.
+ * Using it from a "describe" block causes the state to mutate before the
+ * tests start running.
+ */
+export interface SagaTestRunnerI<
+  Ctx extends {},
+  T extends SagaIterator = SagaIterator
+  > {
+  value?: any
+  done: boolean
+  context: Ctx
+  gen: T
+  /**
+   * Runs the generator through one iteration and updates it's state.
+   */
+  run(): this
+  runWhile(cond: (...args: SagaTestItBlockParams<Ctx>) => boolean): this
+  runUntil(cond: (...args: SagaTestItBlockParams<Ctx>) => boolean): this
+  /**
+   * Replaces the generator on the runner's context. Tests will resume with
+   * values yielded from that generator.
+   * @param gen SagaIterator that replaces the current one
+   */
+  replace(gen: T): this
+}
+
+/*
  * ## SagaTest
  * -------------------------------------------------------------------------- */
 
@@ -106,41 +150,17 @@ export interface SagaTestState<Ctx extends {} = any> {
 }
 
 /**
+ * TODO rewords
  * Saga test runner which holds state from a saga's generator.
- */
+ * These methods act as `it` and `describe` for running a block of code with
+ * a new instance of `SagaTestIt` with state cloned from the originating
+ * `SagaTestIt`.
+ * -------------------------------------------------------------------------- */
 export interface SagaTestI<Ctx> {
   __call__: SagaTestItFunction<Ctx>
   value: any
-  state: SagaTestState<Ctx>
-  /**
-   * ## Mutating methods
-   * These methods mutate the state of the current saga test. They should run
-   * inside of an `ItBlockFunction` or `HookFunction` to ensure it respects the
-   * test's life cycle.
-   * Using it from a "describe" block causes the state to mutate before the
-   * tests start running.
-   * ------------------------------------------------------------------------ */
-  /**
-   * Replaces the value that will be yielded back to the next iteration.
-   * @param value
-   */
-  setValue(value?): this
-  /**
-   * Runs the generator through one iteration and updates it's state.
-   */
-  runSaga(): this
-  /**
-   * Replaces the generator on the test saga. Tests will resume with values
-   * yielded from that generator.
-   * @param saga Cloneable SagaIterator that replaces the current one
-   */
-  replaceSaga(saga: SagaIteratorClone & { name?: string }): this
-  /**
-   * ## Branching methods
-   * These methods act as `it` and `describe` for running a block of code with
-   * a new instance of `SagaTestIt` with state cloned from the originating
-   * `SagaTestIt`.
-   * ------------------------------------------------------------------------ */
+  readonly state: SagaTestState<Ctx>
+  saga: SagaTestRunnerI<Ctx>
   /**
    * Runs the code in a describe block with a new instance of `SagaTestIt`. This
    * is a slightly modified alias for `clone` that serves as sugar for

@@ -9,7 +9,7 @@ import {
   SagaTestIt,
   Ctor,
   It
-} from '../types'
+} from '../../types'
 
 const isDoneOrIO = (effect: Effect, { done }): boolean =>
   done || (effect && effect[IO])

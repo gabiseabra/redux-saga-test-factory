@@ -2,7 +2,7 @@
  * Parsers for `SagaTestI`'s polymorphic functions.
  * @module utils/arguments
  */
-import { SagaTestIt, EffectExpectation, Callback } from '../types'
+import { SagaTestIt, EffectExpectation, Callback } from '../../types'
 import { describeEffect } from './fork'
 
 export function forksArgs<Ctx, T, RT, Fn = Callback<[SagaTestIt<Ctx>]>>(

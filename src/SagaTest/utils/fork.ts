@@ -9,7 +9,7 @@ import {
   SagaIteratorClone,
   cloneableGenerator
 } from '@redux-saga/testing-utils'
-import { EffectExpectation, EffectMatcher } from '../types'
+import { EffectExpectation, EffectMatcher } from '../../types'
 import { isIter } from './generator'
 
 const takeFns = ['takeEvery', 'takeLatest', 'takeLeading', 'takeMaybe']

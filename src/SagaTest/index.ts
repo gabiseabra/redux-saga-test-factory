@@ -1,18 +1,18 @@
 import { EffectMiddleware } from 'redux-saga'
 import { Effect } from '@redux-saga/types'
 import { SagaIteratorClone } from '@redux-saga/testing-utils'
-import contextMiddleware from './middleware/contextMiddleware'
+import contextMiddleware from '../middleware/contextMiddleware'
 import {
   TestEnv,
   SagaTestItFunction,
   SagaTestOptions,
   SagaTestState,
   SagaTestI
-} from './types'
+} from '../types'
 import { itFactory, enhanceIt } from './utils/tests'
 import { matchCallEffect, effectToIterator } from './utils/fork'
 import { forksArgs, cloneArgs, doArgs } from './utils/arguments'
-import Runner from './SagaTest/Runner'
+import Runner from './Runner'
 
 export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
   protected env: TestEnv

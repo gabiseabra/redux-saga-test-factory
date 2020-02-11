@@ -4,9 +4,11 @@ A redux saga test helper with support for cloning, forking and mocks using effec
 
 ## Usage
 
-Initialize the default export from this package to configure a `sagaTestFactory`.
+Initialize the default export from this package to configure a
+`sagaTestFactory`.
 
-The `sagaTest` is an `it` object which runs one test per iteration on a given saga generator.
+The `sagaTest` is an `it` object which runs one test per iteration on a given
+saga generator.
 
 ```js
 import {call, put} from 'redux-saga/effects'
@@ -39,15 +41,18 @@ describe('mySaga', () => {
 
 ## Cloning
 
-`sagaTest.clone` branches the `sagaTest` into another instance of itself with the same sate, which runs without affecting the state of the original one.
+`sagaTest.clone` branches the `sagaTest` into another instance of itself with
+the same sate, which runs without affecting the state of the original one.
 
-It may take a value to override the value resolved from the previous test before resuming.
+It may take a value to override the value resolved from the previous test before
+resuming.
 
 ```ts
 clone(value?): SagaTestIt<Ctx>
 ```
 
-`clone` can be used as a block function by passing a description and callback. The first parameter of the callback is the cloned saga test.
+`clone` can be used as a block function by passing a description and callback.
+The first parameter of the callback is the cloned saga test.
 
 ```js
 clone(desc: string, fn: SagaTestForkBlock<Ctx>): SagaTestIt<Ctx>
@@ -98,13 +103,19 @@ describe('mySaga', () => {
 
 ## Forking
 
-Callable effects can be tested and branched with `sagaTest.forks`.
+Callable effects such as `call` and `fork` can be branched into and tested
+with `sagaTest.forks`.
 
-It tests that an effect is called by checking the current effect against a matcher, and then replaces the `sagaTest` instance's iterator with a new iterator of the forked function, so the test resumes with values yielded from it.
+`forks` tests that some callable effect is yielded by checking the saga
+generator's next result against a matcher, and then replaces the `sagaTest`'s
+generator with one instantiated from that effect's function, and tests resume
+with values yielded from it.
 
-A test matcher may be an effect object or a function of signature type `(e: Effect) => boolean`.
+An effect matcher may be an effect object or a function of signature type
+`(e: Effect) => boolean`.
 
-When a callback is provided the `sagaTest` first is cloned and branches into a describe block, so the state of the original saga test is preserved.
+When a callback is provided to `forks` the `sagaTest` first is cloned and
+branches into a context block, so the state of the original one is preserved.
 
 ```ts
   forks<T, RT>(
@@ -145,15 +156,16 @@ describe('context', () => {
   describe('mainSaga', () => {
     const it = sagaTest(mainSaga)
 
+    // asserts that this takeEvery runs and branches into it's context
     it.forks(takeEvery(ACTION_A, aSaga), it => {
-      it('takes an ACTION_A', () => ({type: ACTION_A}))
-
-      it.forks(fork(aSaga, {type: ACTION_A}))
-
+      it('just yields ACTION_A to takeEvery', () => ({type: ACTION_A}))
+      it.forks('enters the context of aSaga', fork(aSaga, {type: ACTION_A}))
       it('yields a response of A', ({payload}) => {
         payload.action.should.deep.equal(response('A'))
       })
     })
+
+    it.forks(/* another fork ... */)
   })
 })
 ```
@@ -161,9 +173,12 @@ describe('context', () => {
 
 ## Async tests
 
-The saga test runner handles plain, async and generator tests. Async and plain functions get handled as usual by the test runner's `it` while generators get some special treatment.
+The saga test runner handles plain, async and generator test functions. Async
+and plain functions get handled as usual by the test runner's `it` while
+generators get some special treatment.
 
-When a saga test's `it` block is a generator function it iterates over the saga and receives its yielded effects, and then yields something back in response.
+When a saga test's `it` block is a generator function, it iterates over the saga
+and receives its yielded effects, and then yields something back in response.
 
 ```js
 // ...

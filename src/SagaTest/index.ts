@@ -63,8 +63,8 @@ export default class SagaTest<Ctx extends {}> implements SagaTestI<Ctx> {
         const forkedAction = matchMyCallEffect(effect)
         if (!forkedAction)
           throw new AssertionError("Action wasn't forked", {
-            expectedEffect,
-            effect
+            expected: expectedEffect,
+            actual: effect
           })
         it.saga.replace(effectToIterator(forkedAction))
       })
